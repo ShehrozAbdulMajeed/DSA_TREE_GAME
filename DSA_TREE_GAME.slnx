@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="DSA_TREE_GAME/DSA_TREE_GAME.vcxproj" />
+  <Project Path="DSA_TREE_GAME/DSA_TREE_GAME.vcxproj" Id="62f8f8ea-336f-4133-b8ae-95fd1b7fda28" />
 </Solution>
