@@ -1,4 +1,5 @@
 #include"BinaryTree.h"
+#include"MaxHeap.h"
 
 int main() {
 EventLog* log = new EventLog;
@@ -30,9 +31,19 @@ EventLog* log = new EventLog;
 	TreeNode* t1 = tree->lca(8, 11);
 	cout << tree->isSymmetric() << endl;
 	tree->postOrder_I(log);
+	
+	int A[5] = {1,2,3,4,5};
+	MaxHeap* map = new MaxHeap;
+	map->buildMaxHeap(A,5,log);
+	map->display();
+	//map->isMaxHeap();
+	map->extractMax();
+	map->extractMax();
+	map->extractMax();
+	//map->display();
 	for (int i = 0; i < log->size(); i++) {
 		const Events& e = log->get(i);
-		if(e.type == EventTypes::VISIT)
-		cout << "VISIT NODE ID: " << e.id << endl;
+		if (e.type == EventTypes::VISIT)
+			cout << "VISIT NODE ID: " << e.id << endl;
 	}
 }

@@ -142,10 +142,12 @@
     <ClCompile Include="BinaryTree.cpp" />
     <ClCompile Include="Events.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MaxHeap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BinaryTree.h" />
     <ClInclude Include="Events.h" />
+    <ClInclude Include="MaxHeap.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
