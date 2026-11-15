@@ -597,3 +597,19 @@ List* BinaryTree::levelOrder_I(EventLog* log) {
 	return temp;
 }
 
+void BinaryTree::destroyTree(TreeNode* node)
+{
+	if (node == nullptr)
+		return;
+
+	destroyTree(node->left);
+	destroyTree(node->right);
+
+	delete node;
+}
+
+BinaryTree::~BinaryTree()
+{
+	destroyTree(root);
+}
+
