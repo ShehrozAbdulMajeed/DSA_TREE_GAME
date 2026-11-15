@@ -83,6 +83,8 @@ private:
 
 	bool checkID(TreeNode* node, int id);
 
+	void destroyTree(TreeNode* node);
+
 public:
 	BinaryTree();
 
@@ -125,4 +127,6 @@ public:
 	List* postOrder_I(EventLog* log = nullptr);
 
 	List* levelOrder_I(EventLog* log = nullptr);
+
+	virtual ~BinaryTree();
 };

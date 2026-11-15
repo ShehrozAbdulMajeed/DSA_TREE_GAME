@@ -1,0 +1,45 @@
+**BST Event Payload Conventions**
+
+### 1. INSERT
+`log->add(EventTypes::INSERT, nodeID, parentID, side);`
+
+- `parentID = 0` → No parent (root node)
+- `side = 0` → Root
+- `side = 1` → Left child
+- `side = 2` → Right child
+
+### 2. COMPARE
+`log->add(EventTypes::COMPARE, nodeID, key, result);`
+
+- `result = -1` → Key is smaller than current node's value
+- `result = 0` → Key equals current node's value
+- `result = 1` → Key is greater than current node's value
+
+### 3. HIGHLIGHT_SUBTREE
+`log->add(EventTypes::HIGHLIGHT_SUBTREE, nodeID, mode);`
+
+- `mode = 0` → Visited
+- `mode = 1` → Skipped
+- `mode = 2` → Result
+
+### 4. SWAP_VALUE
+`log->add(EventTypes::SWAP_VALUE, nodeID1, nodeID2, value);`
+
+- `nodeID1` → Node whose value is being replaced
+- `nodeID2` → Inorder successor's ID
+- `value` → Successor's value being copied
+
+### 5. UNLINK
+Currently implemented as:
+`log->add(EventTypes::UNLINK, nodeID, 0, nodeValue);`
+
+- `nodeID` → Node being removed
+- `extra = 0` → Currently unused
+- `data` → Value of removed node
+
+**Note:** The UNLINK payload is not finalized yet. We still need to agree on parent ID and child side if the GUI requires them.
+
+### 6. DONE
+`log->add(EventTypes::DONE);`
+
+Signals completion of the operation.
