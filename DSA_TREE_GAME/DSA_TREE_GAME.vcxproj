@@ -139,6 +139,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AVL.cpp" />
     <ClCompile Include="BinaryTree.cpp" />
     <ClCompile Include="BST.cpp" />
     <ClCompile Include="Events.cpp" />

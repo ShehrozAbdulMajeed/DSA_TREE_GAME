@@ -8,6 +8,7 @@ struct TreeNode {
 	TreeNode* right;
 	TreeNode();
 	TreeNode(int d, int v);
+	virtual ~TreeNode() {}
 };
 
 struct List {
@@ -56,8 +57,9 @@ struct treeQueue {
 class BinaryTree {
 protected:
 	TreeNode* root;
-private:
 	int max(int a, int b);
+private:
+	
 
 	TreeNode* postRev(List*& postOrder, List* inOrder);
 

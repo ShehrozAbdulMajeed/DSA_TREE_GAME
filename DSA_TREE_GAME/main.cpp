@@ -1,40 +1,22 @@
-#include"BinaryTree.h"
+#include"AVL.h"
 #include"MaxHeap.h"
 
-    cout << endl;
 
-    // Free the returned linked list
-    current = result;
+int main() {
+AVL* tree = new AVL;
+cout << tree->remove(2);
+tree->insert(20,10);
+tree->insert(10,20);
+tree->insert(30,30);
+cout << tree->insert(10, 33);
+tree->insert(5,40);
+tree->insert(15,50);
+tree->insert(25, 60);
+tree->insert(40, 70);
+cout << tree->kth(1)->key << " ";
+cout << tree->kth(4)->key << " ";
+cout << tree->kth(7)->key << " ";
+cout << tree->rank(17) << " ";
+cout << tree->countInRange(30,15) << " ";
 
-	List* po = new List(2, 2);
-	po->next = new List(1, 1);
-	po->next->next = new List(3, 2);
-	po->next->next->next = new List(4, 1);
-	po->next->next->next->next = new List(5, 5);
-	List* temp = pre;
-	BinaryTree* tree = new BinaryTree;
-	tree->setTree(tree->postBuild(po, in));
-	tree->traverse(tree->getTree());
-	pre = temp;
-	cout << '\n';
-	cout << tree->height(tree->getTree());
-	cout << '\n' << tree->diameter() << '\n';
-	TreeNode* t1 = tree->lca(8, 11);
-	cout << tree->isSymmetric() << endl;
-	tree->postOrder_I(log);
-	
-	int A[5] = {1,2,3,4,5};
-	MaxHeap* map = new MaxHeap;
-	map->buildMaxHeap(A,5,log);
-	map->display();
-	//map->isMaxHeap();
-	map->extractMax();
-	map->extractMax();
-	map->extractMax();
-	//map->display();
-	for (int i = 0; i < log->size(); i++) {
-		const Events& e = log->get(i);
-		if (e.type == EventTypes::VISIT)
-			cout << "VISIT NODE ID: " << e.id << endl;
-	}
 }

@@ -1,38 +1,49 @@
 #pragma once
 #include "BinaryTree.h"
 
+struct BSTNode : TreeNode {
+    int key;
+    int payload;
+
+    BSTNode(int id, int key, int payload)
+        : TreeNode(id, key), key(key), payload(payload) {
+    }
+};
+
 class BST : public BinaryTree
 {
-private:
+protected:
     int nextID;
+    BSTNode* bstRoot() const;
+private:
 
-    TreeNode* searchHelper(TreeNode* node, int key);
-    TreeNode* findMinHelper(TreeNode* node);
-    TreeNode* findMaxHelper(TreeNode* node);
-    TreeNode* kthSmallestHelper(TreeNode* node, int k, int& count);
+    BSTNode* searchHelper(BSTNode* node, int key);
+    BSTNode* findMinHelper(BSTNode* node);
+    BSTNode* findMaxHelper(BSTNode* node);
+    BSTNode* kthSmallestHelper(BSTNode* node, int k, int& count);
 
     bool removeHelper(TreeNode*& node, int key, EventLog* log);
 
-    void rangeQueryHelper(TreeNode* node, int lo, int hi, List*& tail, EventLog* log);
+    void rangeQueryHelper(BSTNode* node, int lo, int hi, List*& tail, EventLog* log);
 
 public:
     BST();
 
     bool insert(int key, EventLog* log = nullptr);
 
-    TreeNode* search(int key, EventLog* log = nullptr);
+    BSTNode* search(int key, EventLog* log = nullptr);
 
-    TreeNode* findMin();
-    TreeNode* findMax();
+    BSTNode* findMin();
+    BSTNode* findMax();
 
-    TreeNode* successor(int key);
-    TreeNode* predecessor(int key);
+    BSTNode* successor(int key);
+    BSTNode* predecessor(int key);
 
     bool remove(int key, EventLog* log = nullptr);
 
     List* rangeQuery(int lo, int hi, EventLog* log = nullptr);
 
-    TreeNode* kthSmallest(int k);
+    BSTNode* kthSmallest(int k);
 
-    TreeNode* lcaBST(int a, int b);
+    BSTNode* lcaBST(int a, int b);
 };

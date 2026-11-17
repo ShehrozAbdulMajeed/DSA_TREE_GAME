@@ -5,11 +5,12 @@ BST::BST() : BinaryTree()
     nextID = 1;
 }
 
+BSTNode* BST::bstRoot() const { return static_cast<BSTNode*>(root); }
 
 bool BST::insert(int key, EventLog* log)
 {
-    TreeNode* current = root;
-    TreeNode* parent = nullptr;
+    BSTNode* current = bstRoot();
+    BSTNode* parent = nullptr;
 
     while (current != nullptr)
     {
@@ -36,11 +37,11 @@ bool BST::insert(int key, EventLog* log)
         }
         else if (key < current->val)
         {
-            current = current->left;
+            current = static_cast<BSTNode*>(current->left);
         }
         else
         {
-            current = current->right;
+            current = static_cast<BSTNode*>(current->right);
         }
     }
 
@@ -81,7 +82,7 @@ bool BST::insert(int key, EventLog* log)
     return true;
 }
 
-TreeNode* BST::searchHelper(TreeNode* node, int key)
+BSTNode* BST::searchHelper(BSTNode* node, int key)
 {
     if (node == nullptr)
         return nullptr;
@@ -90,15 +91,15 @@ TreeNode* BST::searchHelper(TreeNode* node, int key)
         return node;
 
     if (key < node->val)
-        return searchHelper(node->left, key);
+        return searchHelper(static_cast<BSTNode*>(node->left), key);
 
-    return searchHelper(node->right, key);
+    return searchHelper(static_cast<BSTNode*>(node->right), key);
 }
 
 
-TreeNode* BST::search(int key, EventLog* log)
+BSTNode* BST::search(int key, EventLog* log)
 {
-    TreeNode* current = root;
+    BSTNode* current = bstRoot();
 
     while (current != nullptr)
     {
@@ -126,9 +127,9 @@ TreeNode* BST::search(int key, EventLog* log)
         }
 
         if (key < current->val)
-            current = current->left;
+            current = static_cast<BSTNode*>(current->left);
         else
-            current = current->right;
+            current = static_cast<BSTNode*>(current->right);
     }
 
     if (log != nullptr)
@@ -138,49 +139,49 @@ TreeNode* BST::search(int key, EventLog* log)
 }
 
 
-TreeNode* BST::findMinHelper(TreeNode* node)
+BSTNode* BST::findMinHelper(BSTNode* node)
 {
     if (node == nullptr)
         return nullptr;
 
     while (node->left != nullptr)
     {
-        node = node->left;
+        node = static_cast<BSTNode*>(node->left);
     }
 
     return node;
 }
 
-TreeNode* BST::findMin()
+BSTNode* BST::findMin()
 {
-    return findMinHelper(root);
+    return findMinHelper(bstRoot());
 }
 
 
-TreeNode* BST::findMaxHelper(TreeNode* node)
+BSTNode* BST::findMaxHelper(BSTNode* node)
 {
     if (node == nullptr)
         return nullptr;
 
     while (node->right != nullptr)
     {
-        node = node->right;
+        node = static_cast<BSTNode*>(node->right);
     }
 
     return node;
 }
 
 
-TreeNode* BST::findMax()
+BSTNode* BST::findMax()
 {
-    return findMaxHelper(root);
+    return findMaxHelper(bstRoot());
 }
 
 
-TreeNode* BST::successor(int key)
+BSTNode* BST::successor(int key)
 {
-    TreeNode* current = root;
-    TreeNode* target = nullptr;
+    BSTNode* current = bstRoot();
+    BSTNode* target = nullptr;
 
     while (current != nullptr)
     {
@@ -191,11 +192,11 @@ TreeNode* BST::successor(int key)
         }
         else if (key < current->val)
         {
-            current = current->left;
+            current = static_cast<BSTNode*>(current->left);
         }
         else
         {
-            current = current->right;
+            current = static_cast<BSTNode*>(current->right);
         }
     }
 
@@ -204,22 +205,22 @@ TreeNode* BST::successor(int key)
 
     // Case 1: Target has a right subtree
     if (target->right != nullptr)
-        return findMinHelper(target->right);
+        return findMinHelper(static_cast<BSTNode*>(target->right));
 
     // Case 2: No right subtree
     TreeNode* successorNode = nullptr;
-    current = root;
+    current = bstRoot();
 
     while (current != nullptr)
     {
         if (key < current->val)
         {
             successorNode = current;
-            current = current->left;
+            current = static_cast<BSTNode*>(current->left);
         }
         else if (key > current->val)
         {
-            current = current->right;
+            current = static_cast<BSTNode*>(current->right);
         }
         else
         {
@@ -227,14 +228,14 @@ TreeNode* BST::successor(int key)
         }
     }
 
-    return successorNode;
+    return static_cast<BSTNode*>(successorNode);
 }
 
 
-TreeNode* BST::predecessor(int key)
+BSTNode* BST::predecessor(int key)
 {
-    TreeNode* current = root;
-    TreeNode* target = nullptr;
+    BSTNode* current = bstRoot();
+    BSTNode* target = nullptr;
 
     while (current != nullptr)
     {
@@ -245,11 +246,11 @@ TreeNode* BST::predecessor(int key)
         }
         else if (key < current->val)
         {
-            current = current->left;
+            current = static_cast<BSTNode*>(current->left);
         }
         else
         {
-            current = current->right;
+            current = static_cast<BSTNode*>(current->right);
         }
     }
 
@@ -258,22 +259,22 @@ TreeNode* BST::predecessor(int key)
 
     // Case 1: Target has a left subtree
     if (target->left != nullptr)
-        return findMaxHelper(target->left);
+        return findMaxHelper(static_cast<BSTNode*>(target->left));
 
     // Case 2: No left subtree
     TreeNode* predecessorNode = nullptr;
-    current = root;
+    current = bstRoot();
 
     while (current != nullptr)
     {
         if (key > current->val)
         {
             predecessorNode = current;
-            current = current->right;
+            current = static_cast<BSTNode*>(current->right);
         }
         else if (key < current->val)
         {
-            current = current->left;
+            current = static_cast<BSTNode*>(current->left);
         }
         else
         {
@@ -281,14 +282,15 @@ TreeNode* BST::predecessor(int key)
         }
     }
 
-    return predecessorNode;
+    return static_cast<BSTNode*>(predecessorNode);
 }
-
 
 bool BST::removeHelper(TreeNode*& node, int key, EventLog* log)
 {
     if (node == nullptr)
         return false;
+
+    BSTNode* temp = static_cast<BSTNode*>(node);
 
     if (log != nullptr)
     {
@@ -321,7 +323,7 @@ bool BST::removeHelper(TreeNode*& node, int key, EventLog* log)
         if (log != nullptr)
             log->add(EventTypes::UNLINK, temp->id, 0, temp->val);
 
-        node = node->right;
+        node = static_cast<BSTNode*>(node->right);
         delete temp;
 
         return true;
@@ -335,7 +337,7 @@ bool BST::removeHelper(TreeNode*& node, int key, EventLog* log)
         if (log != nullptr)
             log->add(EventTypes::UNLINK, temp->id, 0, temp->val);
 
-        node = node->left;
+        node = static_cast<BSTNode*>(node->left);
         delete temp;
 
         return true;
@@ -343,7 +345,7 @@ bool BST::removeHelper(TreeNode*& node, int key, EventLog* log)
 
     // Case 3: Node has two children
 
-    TreeNode* successorNode = findMinHelper(node->right);
+    TreeNode* successorNode = findMinHelper(static_cast<BSTNode*>(node->right));
 
     if (log != nullptr)
     {
@@ -354,7 +356,6 @@ bool BST::removeHelper(TreeNode*& node, int key, EventLog* log)
 
     return removeHelper(node->right, successorNode->val, log);
 }
-
 
 bool BST::remove(int key, EventLog* log)
 {
@@ -367,7 +368,7 @@ bool BST::remove(int key, EventLog* log)
 }
 
 
-void BST::rangeQueryHelper(TreeNode* node, int lo, int hi,
+void BST::rangeQueryHelper(BSTNode* node, int lo, int hi,
     List*& tail, EventLog* log)
 {
     if (node == nullptr)
@@ -384,7 +385,7 @@ void BST::rangeQueryHelper(TreeNode* node, int lo, int hi,
             log->add(EventTypes::HIGHLIGHT_SUBTREE, node->left->id, 1);
         }
 
-        rangeQueryHelper(node->right, lo, hi, tail, log);
+        rangeQueryHelper(static_cast<BSTNode*>(node->right), lo, hi, tail, log);
     }
 
     // Case 2: Current value is larger than the range
@@ -395,13 +396,13 @@ void BST::rangeQueryHelper(TreeNode* node, int lo, int hi,
             log->add(EventTypes::HIGHLIGHT_SUBTREE, node->right->id, 1);
         }
 
-        rangeQueryHelper(node->left, lo, hi, tail, log);
+        rangeQueryHelper(static_cast<BSTNode*>(node->left), lo, hi, tail, log);
     }
 
     // Case 3: Current value is inside the range
     else
     {
-        rangeQueryHelper(node->left, lo, hi, tail, log);
+        rangeQueryHelper(static_cast<BSTNode*>(node->left), lo, hi, tail, log);
 
         if (log != nullptr)
         {
@@ -411,7 +412,7 @@ void BST::rangeQueryHelper(TreeNode* node, int lo, int hi,
         tail->next = new List(node->id, node->val);
         tail = tail->next;
 
-        rangeQueryHelper(node->right, lo, hi, tail, log);
+        rangeQueryHelper(static_cast<BSTNode*>(node->right), lo, hi, tail, log);
     }
 }
 
@@ -425,7 +426,7 @@ List* BST::rangeQuery(int lo, int hi, EventLog* log)
 
     if (lo <= hi)
     {
-        rangeQueryHelper(root, lo, hi, tail, log);
+        rangeQueryHelper(bstRoot(), lo, hi, tail, log);
     }
 
     if (log != nullptr)
@@ -435,12 +436,12 @@ List* BST::rangeQuery(int lo, int hi, EventLog* log)
 }
 
 
-TreeNode* BST::kthSmallestHelper(TreeNode* node, int k, int& count)
+BSTNode* BST::kthSmallestHelper(BSTNode* node, int k, int& count)
 {
     if (node == nullptr)
         return nullptr;
 
-    TreeNode* result = kthSmallestHelper(node->left, k, count);
+    BSTNode* result = kthSmallestHelper(static_cast<BSTNode*>(node->left), k, count);
 
     if (result != nullptr)
         return result;
@@ -450,32 +451,32 @@ TreeNode* BST::kthSmallestHelper(TreeNode* node, int k, int& count)
     if (count == k)
         return node;
 
-    return kthSmallestHelper(node->right, k, count);
+    return kthSmallestHelper(static_cast<BSTNode*>(node->right), k, count);
 }
 
 
-TreeNode* BST::kthSmallest(int k)
+BSTNode* BST::kthSmallest(int k)
 {
     if (k <= 0)
         return nullptr;
 
     int count = 0;
 
-    return kthSmallestHelper(root, k, count);
+    return kthSmallestHelper(bstRoot(), k, count);
 }
 
-TreeNode* BST::lcaBST(int a, int b)
+BSTNode* BST::lcaBST(int a, int b)
 {
     if (search(a) == nullptr || search(b) == nullptr)
         return nullptr;
 
-    TreeNode* current = root;
+    BSTNode* current = bstRoot();
 
     while (current != nullptr)
     {
-        if (a < current->val && b < current->val) current = current->left;
+        if (a < current->val && b < current->val) current = static_cast<BSTNode*>(current->left);
 
-        else if (a > current->val && b > current->val) current = current->right;
+        else if (a > current->val && b > current->val) current = static_cast<BSTNode*>(current->right);
 
         else return current;
     }
