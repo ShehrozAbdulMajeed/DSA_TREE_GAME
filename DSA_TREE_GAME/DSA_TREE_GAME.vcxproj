@@ -165,6 +165,10 @@
     <ClCompile Include="Events.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MaxHeap.cpp" />
+    <ClCompile Include="Playback.cpp" />
+    <ClCompile Include="SandboxScreen.cpp" />
+    <ClCompile Include="TreeMirror.cpp" />
+    <ClCompile Include="TreeView.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AVL.h" />
@@ -172,6 +176,12 @@
     <ClInclude Include="BST.h" />
     <ClInclude Include="Events.h" />
     <ClInclude Include="MaxHeap.h" />
+    <ClInclude Include="Playback.h" />
+    <ClInclude Include="SandboxScreen.h" />
+    <ClInclude Include="Screen.h" />
+    <ClInclude Include="TextUtil.h" />
+    <ClInclude Include="TreeMirror.h" />
+    <ClInclude Include="TreeView.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Conventions.txt" />

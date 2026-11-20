@@ -1,45 +1,112 @@
-**BST Event Payload Conventions**
+**Event Payload Conventions**
+
+All events are logged as log->add(type, id, extra, data). Every public operation
+ends its batch with exactly ONE DONE event (heapSort included - no DONE mid-batch).
+Node ids are stable across rotations and value swaps (SWAP_VALUE moves values, not ids).
+
+==================== TREE EVENTS (BST / AVL) ====================
 
 ### 1. INSERT
-`log->add(EventTypes::INSERT, nodeID, parentID, side);`
-
-- `parentID = 0` → No parent (root node)
-- `side = 0` → Root
-- `side = 1` → Left child
-- `side = 2` → Right child
+log->add(EventTypes::INSERT, nodeID, parentID, side);
+- parentID = 0 -> no parent (root)
+- side = 0 root, 1 left child, 2 right child
+Same payload for BST and AVL.
 
 ### 2. COMPARE
-`log->add(EventTypes::COMPARE, nodeID, key, result);`
+log->add(EventTypes::COMPARE, nodeID, key, result);
+- result = -1 key < node's key, 0 equal, 1 key > node's key
 
-- `result = -1` → Key is smaller than current node's value
-- `result = 0` → Key equals current node's value
-- `result = 1` → Key is greater than current node's value
+### 3. VISIT
+log->add(EventTypes::VISIT, nodeID);
+Used by traversals, BST::search (on the hit) and AVL kth / rank (each node touched).
 
-### 3. HIGHLIGHT_SUBTREE
-`log->add(EventTypes::HIGHLIGHT_SUBTREE, nodeID, mode);`
+### 4. HIGHLIGHT_SUBTREE
+log->add(EventTypes::HIGHLIGHT_SUBTREE, nodeID, mode);
+- mode = 0 visited, 1 skipped, 2 result
 
-- `mode = 0` → Visited
-- `mode = 1` → Skipped
-- `mode = 2` → Result
+### 5. SWAP_VALUE (two-child delete)
+log->add(EventTypes::SWAP_VALUE, nodeID1, nodeID2, value);
+- nodeID1 = node whose value is replaced
+- nodeID2 = inorder successor's id
+- value   = successor's key being copied
+The successor is then removed -> followed by COMPAREs and an UNLINK for nodeID2.
 
-### 4. SWAP_VALUE
-`log->add(EventTypes::SWAP_VALUE, nodeID1, nodeID2, value);`
+### 6. UNLINK   (FINALIZED - changed from the old payload)
+log->add(EventTypes::UNLINK, nodeID, parentID, side);
+- nodeID   = node being removed
+- parentID = 0 if it was the root
+- side     = 0 root, 1 left child, 2 right child (the slot it occupied)
+Matches INSERT, so the renderer can retract the edge. The removed value is no
+longer in the payload (the GUI already knows it from its own node-id map).
 
-- `nodeID1` → Node whose value is being replaced
-- `nodeID2` → Inorder successor's ID
-- `value` → Successor's value being copied
+### 7. ROTATE (AVL)   logged ONCE per rebalance case, before its UPDATE_* events
+log->add(EventTypes::ROTATE, pivotID, type, newSubtreeRootID);
+- pivotID = the unbalanced node (top of the rotation)
+- type    = RotationType::LL = 0, RR = 1, LR = 2, RL = 3
+- newSubtreeRootID = id of the node that ends up as the subtree root
+  LL: pivot's left child   RR: pivot's right child
+  LR: left child's right child   RL: right child's left child
+LR / RL are two primitive rotations but ONE ROTATE event; the animator should
+play them as two tweens (pivot's child first, then the pivot).
 
-### 5. UNLINK
-Currently implemented as:
-`log->add(EventTypes::UNLINK, nodeID, 0, nodeValue);`
+### 8. UPDATE_HEIGHT / UPDATE_SIZE (AVL)   only emitted when the value changes
+log->add(EventTypes::UPDATE_HEIGHT, nodeID, oldValue, newValue);
+log->add(EventTypes::UPDATE_SIZE,   nodeID, oldValue, newValue);
 
-- `nodeID` → Node being removed
-- `extra = 0` → Currently unused
-- `data` → Value of removed node
+### 9. BALANCE_ALERT (AVL)
+log->add(EventTypes::BALANCE_ALERT, nodeID, balanceFactor);
+Emitted when |balanceFactor| > 1, right before the ROTATE event.
 
-**Note:** The UNLINK payload is not finalized yet. We still need to agree on parent ID and child side if the GUI requires them.
+### 10. DONE
+log->add(EventTypes::DONE);
 
-### 6. DONE
-`log->add(EventTypes::DONE);`
+AVL insert event order for one insert:
+  COMPARE... (path down) -> INSERT -> [per ancestor, bottom-up:
+  UPDATE_HEIGHT/UPDATE_SIZE -> (BALANCE_ALERT -> ROTATE -> UPDATE_*)] -> DONE
 
-Signals completion of the operation.
+==================== HEAP EVENTS (MaxHeap) ====================
+Heap payloads use ARRAY INDICES (zero-based), not node ids.
+COMPARE and INSERT therefore mean something different from the tree versions.
+
+### H1. HEAP_BUILD
+log->add(EventTypes::HEAP_BUILD, n, firstNonLeafIndex);
+firstNonLeafIndex = n/2 - 1 (-1 when there is nothing to sift)
+
+### H2. COMPARE (heap)
+log->add(EventTypes::COMPARE, indexA, indexB, result);
+- result = sign(arr[indexA] - arr[indexB]): -1, 0 or 1
+- siftDown: A = current largest, B = child  -> result < 0 means the child wins
+- siftUp:   A = the moving element, B = its parent -> result > 0 means swap
+
+### H3. HEAP_SWAP
+log->add(EventTypes::HEAP_SWAP, indexA, indexB, reason);
+- reason = SwapReason::SIFT_DOWN 0, SIFT_UP 1, EXTRACT 2 (root <-> last active), MANUAL 3 (player swap)
+
+### H4. HEAPIFY_START / HEAPIFY_DONE
+log->add(EventTypes::HEAPIFY_START, startIndex, heapSize);
+log->add(EventTypes::HEAPIFY_DONE,  startIndex, heapSize, finalIndex);
+finalIndex = where the sifted element ended up.
+
+### H5. INSERT (heap)
+log->add(EventTypes::INSERT, value, index);
+
+### H6. EXTRACT_MAX
+log->add(EventTypes::EXTRACT_MAX, value, rootIndex(0), heapSizeBeforeExtract);
+
+### H7. MARK_SORTED
+log->add(EventTypes::MARK_SORTED, index, value);
+Heap sort marks EVERY index, including index 0 at the very end.
+
+### H8. HEAP_SIZE_CHANGE
+log->add(EventTypes::HEAP_SIZE_CHANGE, newSize, oldSize);
+
+### H9. HEAP_SORT_COMPLETE
+log->add(EventTypes::HEAP_SORT_COMPLETE, n);   (followed by the single DONE)
+
+extractMax order:  EXTRACT_MAX -> HEAP_SWAP(0,last,EXTRACT) -> MARK_SORTED -> HEAP_SIZE_CHANGE
+                   -> HEAPIFY_START -> (COMPARE.., HEAP_SWAP..) -> HEAPIFY_DONE -> DONE
+heapSort order:    HEAP_BUILD -> HEAP_SIZE_CHANGE -> (build-phase heapify events)
+                   -> repeat [EXTRACT_MAX, HEAP_SWAP, MARK_SORTED, HEAP_SIZE_CHANGE, heapify events]
+                   -> MARK_SORTED(0) -> HEAP_SIZE_CHANGE(0,1) -> HEAP_SORT_COMPLETE -> DONE
+
+Array layout: [0, size()) active heap, [size(), totalSize()) sorted region.

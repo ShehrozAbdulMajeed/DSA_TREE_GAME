@@ -3,6 +3,7 @@
 BST::BST() : BinaryTree()
 {
     nextID = 1;
+    compareCount = 0;
 }
 
 BSTNode* BST::bstRoot() const { return static_cast<BSTNode*>(root); }
@@ -16,36 +17,31 @@ bool BST::insert(int key, EventLog* log)
     {
         parent = current;
 
+        int result = 0;
+        if (key < current->val) result = -1;
+        else if (key > current->val) result = 1;
+
+        compareCount++;
         if (log != nullptr)
-        {
-            int result = 0;
-
-            if (key < current->val)
-                result = -1;
-            else if (key > current->val)
-                result = 1;
-
             log->add(EventTypes::COMPARE, current->id, key, result);
-        }
 
-        if (key == current->val)
+        if (result == 0)
         {
             if (log != nullptr)
                 log->add(EventTypes::DONE);
-
             return false;
         }
-        else if (key < current->val)
-        {
+
+        if (result < 0)
             current = static_cast<BSTNode*>(current->left);
-        }
         else
-        {
             current = static_cast<BSTNode*>(current->right);
-        }
     }
 
-    TreeNode* newNode = new TreeNode(nextID++, key);
+    BSTNode* newNode = new BSTNode(nextID++, key, 0);
+
+    int parentID = 0;
+    int side = 0;   // 0 = root, 1 = left, 2 = right
 
     if (parent == nullptr)
     {
@@ -54,27 +50,18 @@ bool BST::insert(int key, EventLog* log)
     else if (key < parent->val)
     {
         parent->left = newNode;
+        parentID = parent->id;
+        side = 1;
     }
     else
     {
         parent->right = newNode;
+        parentID = parent->id;
+        side = 2;
     }
 
     if (log != nullptr)
     {
-        int parentID = 0;
-        int side = 0;
-
-        if (parent != nullptr)
-        {
-            parentID = parent->id;
-
-            if (key < parent->val)
-                side = 1;  
-            else
-                side = 2; 
-        }
-
         log->add(EventTypes::INSERT, newNode->id, parentID, side);
         log->add(EventTypes::DONE);
     }
@@ -114,6 +101,7 @@ BSTNode* BST::search(int key, EventLog* log)
 
             log->add(EventTypes::COMPARE, current->id, key, result);
         }
+        compareCount++;
 
         if (current->val == key)
         {
@@ -285,81 +273,68 @@ BSTNode* BST::predecessor(int key)
     return static_cast<BSTNode*>(predecessorNode);
 }
 
-bool BST::removeHelper(TreeNode*& node, int key, EventLog* log)
+bool BST::removeHelper(TreeNode*& node, int key, EventLog* log, int parentId, int side)
 {
     if (node == nullptr)
         return false;
 
-    BSTNode* temp = static_cast<BSTNode*>(node);
+    int result = 0;
+    if (key < node->val) result = -1;
+    else if (key > node->val) result = 1;
 
+    compareCount++;
     if (log != nullptr)
-    {
-        int result = 0;
-
-        if (key < node->val)
-            result = -1;
-        else if (key > node->val)
-            result = 1;
-
         log->add(EventTypes::COMPARE, node->id, key, result);
-    }
 
-    if (key < node->val)
-    {
-        return removeHelper(node->left, key, log);
-    }
+    if (result < 0)
+        return removeHelper(node->left, key, log, node->id, 1);
 
-    else if (key > node->val)
-    {
-        return removeHelper(node->right, key, log);
-    }
+    if (result > 0)
+        return removeHelper(node->right, key, log, node->id, 2);
 
-
-    // Case 1 and Case 2: No left child
+    // Case 1 and 2a: no left child (leaf, or only a right child)
     if (node->left == nullptr)
     {
-        TreeNode* temp = node;
+        TreeNode* old = node;
 
         if (log != nullptr)
-            log->add(EventTypes::UNLINK, temp->id, 0, temp->val);
+            log->add(EventTypes::UNLINK, old->id, parentId, side);
 
-        node = static_cast<BSTNode*>(node->right);
-        delete temp;
-
+        node = node->right;
+        delete old;
         return true;
     }
 
-    // Case 2: No right child
-    else if (node->right == nullptr)
+    // Case 2b: only a left child
+    if (node->right == nullptr)
     {
-        TreeNode* temp = node;
+        TreeNode* old = node;
 
         if (log != nullptr)
-            log->add(EventTypes::UNLINK, temp->id, 0, temp->val);
+            log->add(EventTypes::UNLINK, old->id, parentId, side);
 
-        node = static_cast<BSTNode*>(node->left);
-        delete temp;
-
+        node = node->left;
+        delete old;
         return true;
     }
 
-    // Case 3: Node has two children
-
-    TreeNode* successorNode = findMinHelper(static_cast<BSTNode*>(node->right));
+    // Case 3: two children -> copy inorder successor into this node, delete the successor
+    BSTNode* target = static_cast<BSTNode*>(node);
+    BSTNode* succ = findMinHelper(static_cast<BSTNode*>(node->right));
 
     if (log != nullptr)
-    {
-        log->add(EventTypes::SWAP_VALUE, node->id, successorNode->id, successorNode->val);
-    }
-    
-    node->val = successorNode->val;
+        log->add(EventTypes::SWAP_VALUE, target->id, succ->id, succ->key);
 
-    return removeHelper(node->right, successorNode->val, log);
+    target->val = succ->val;
+    target->key = succ->key;
+    target->payload = succ->payload;
+
+    return removeHelper(node->right, succ->key, log, node->id, 2);
 }
 
 bool BST::remove(int key, EventLog* log)
 {
-    bool result = removeHelper(root, key, log);
+    bool result = removeHelper(root, key, log, 0, 0);
 
     if (log != nullptr)
         log->add(EventTypes::DONE);
@@ -467,7 +442,7 @@ BSTNode* BST::kthSmallest(int k)
 
 BSTNode* BST::lcaBST(int a, int b)
 {
-    if (search(a) == nullptr || search(b) == nullptr)
+    if (searchHelper(bstRoot(), a) == nullptr || searchHelper(bstRoot(), b) == nullptr)
         return nullptr;
 
     BSTNode* current = bstRoot();
@@ -483,10 +458,3 @@ BSTNode* BST::lcaBST(int a, int b)
 
     return nullptr;
 }
-
-
-
-
-
-
-

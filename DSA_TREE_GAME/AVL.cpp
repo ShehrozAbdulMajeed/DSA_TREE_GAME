@@ -1,316 +1,316 @@
 #include"AVL.h"
 
 int AVL::getHeight(AVLNode* node) {
-	if(node != nullptr) return node->height;
+	if (node != nullptr) return node->height;
 	return 0;
 }
 
 int AVL::getSize(AVLNode* node) {
-	if(node != nullptr) return node->size;
+	if (node != nullptr) return node->size;
 	return 0;
 }
 
-void AVL::updateHeight(AVLNode* node) {
-if(node != nullptr) node->height = 1+max(getHeight(static_cast<AVLNode*>(node->left)),getHeight(static_cast<AVLNode*>(node->right)));
+void AVL::updateHeight(AVLNode* node, EventLog* log) {
+	if (node == nullptr) return;
+	int old = node->height;
+	node->height = 1 + max(getHeight(static_cast<AVLNode*>(node->left)), getHeight(static_cast<AVLNode*>(node->right)));
+	if (log != nullptr && old != node->height)
+		log->add(EventTypes::UPDATE_HEIGHT, node->id, old, node->height);
 }
 
-void AVL::updateSize(AVLNode* node) {
-	if(node != nullptr) node->size = 1+getSize(static_cast<AVLNode*>(node->left))+getSize(static_cast<AVLNode*>(node->right));
+void AVL::updateSize(AVLNode* node, EventLog* log) {
+	if (node == nullptr) return;
+	int old = node->size;
+	node->size = 1 + getSize(static_cast<AVLNode*>(node->left)) + getSize(static_cast<AVLNode*>(node->right));
+	if (log != nullptr && old != node->size)
+		log->add(EventTypes::UPDATE_SIZE, node->id, old, node->size);
 }
 
 int AVL::balanceFactor(AVLNode* node) {
-	 return getHeight(static_cast<AVLNode*>(node->left))-getHeight(static_cast<AVLNode*>(node->right));
+	if (node == nullptr) return 0;
+	return getHeight(static_cast<AVLNode*>(node->left)) - getHeight(static_cast<AVLNode*>(node->right));
 }
 
-AVLNode* AVL::rotateRight(AVLNode* y) {
+AVLNode* AVL::rotateRight(AVLNode* y, EventLog* log) {
 	AVLNode* x = static_cast<AVLNode*>(y->left);
 	AVLNode* T2 = static_cast<AVLNode*>(x->right);
 	x->right = y;
 	y->left = T2;
-	updateHeight(y);
-	updateSize(y);
+	rotationCount++;
 
-	updateHeight(x);
-	updateSize(x);
+	updateHeight(y, log);
+	updateSize(y, log);
+	updateHeight(x, log);
+	updateSize(x, log);
 
 	return x;
 }
 
-AVLNode* AVL::rotateLeft(AVLNode* y) {
+AVLNode* AVL::rotateLeft(AVLNode* y, EventLog* log) {
 	AVLNode* x = static_cast<AVLNode*>(y->right);
 	AVLNode* T2 = static_cast<AVLNode*>(x->left);
 	x->left = y;
 	y->right = T2;
-	updateHeight(y);
-	updateSize(y);
+	rotationCount++;
 
-	updateHeight(x);
-	updateSize(x);
+	updateHeight(y, log);
+	updateSize(y, log);
+	updateHeight(x, log);
+	updateSize(x, log);
 
 	return x;
 }
 
-AVLNode* AVL::insertHelper(AVLNode* node, int key, int payload, EventLog* log, bool& check) {
-    if (node == nullptr) {
-        AVLNode* temp = new AVLNode(nextID++, key, payload);
-        check = true;
-        if (log)
-            log->add(EventTypes::INSERT, temp->id, 0, 0);
+AVLNode* AVL::rebalance(AVLNode* node, EventLog* log) {
+	if (node == nullptr)
+		return nullptr;
 
-        return temp;
-    }
+	updateHeight(node, log);
+	updateSize(node, log);
 
-    if (key < node->key) {
-        node->left = insertHelper(
-            static_cast<AVLNode*>(node->left), key, payload, log
-        ,check);
-    }
-    else if (key > node->key) {
-        node->right = insertHelper(
-            static_cast<AVLNode*>(node->right), key, payload, log
-        ,check);
-    }
-    else {
-        return node; 
-    }
-return rebalance(node);
+	int bf = balanceFactor(node);
+	if (bf >= -1 && bf <= 1)
+		return node;
+
+	// ROTATE(pivotId, type, newSubtreeRootId) is logged once per case, before the
+	// UPDATE_HEIGHT / UPDATE_SIZE events produced by the rotation itself.
+	if (log != nullptr)
+		log->add(EventTypes::BALANCE_ALERT, node->id, bf);
+
+	if (bf > 1) {
+		AVLNode* l = static_cast<AVLNode*>(node->left);
+		if (balanceFactor(l) >= 0) {                       // LL
+			if (log != nullptr)
+				log->add(EventTypes::ROTATE, node->id, RotationType::LL, l->id);
+			return rotateRight(node, log);
+		}
+		AVLNode* lr = static_cast<AVLNode*>(l->right);     // LR
+		if (log != nullptr)
+			log->add(EventTypes::ROTATE, node->id, RotationType::LR, lr->id);
+		node->left = rotateLeft(l, log);
+		return rotateRight(node, log);
+	}
+
+	AVLNode* r = static_cast<AVLNode*>(node->right);
+	if (balanceFactor(r) <= 0) {                           // RR
+		if (log != nullptr)
+			log->add(EventTypes::ROTATE, node->id, RotationType::RR, r->id);
+		return rotateLeft(node, log);
+	}
+	AVLNode* rl = static_cast<AVLNode*>(r->left);          // RL
+	if (log != nullptr)
+		log->add(EventTypes::ROTATE, node->id, RotationType::RL, rl->id);
+	node->right = rotateRight(r, log);
+	return rotateLeft(node, log);
+}
+
+AVLNode* AVL::insertHelper(AVLNode* node, int key, int payload, EventLog* log,
+	bool& inserted, int parentId, int side) {
+	if (node == nullptr) {
+		AVLNode* temp = new AVLNode(nextID++, key, payload);
+		inserted = true;
+		if (log != nullptr)
+			log->add(EventTypes::INSERT, temp->id, parentId, side);
+		return temp;
+	}
+
+	int result = 0;
+	if (key < node->key) result = -1;
+	else if (key > node->key) result = 1;
+
+	compareCount++;
+	if (log != nullptr)
+		log->add(EventTypes::COMPARE, node->id, key, result);
+
+	if (result < 0)
+		node->left = insertHelper(static_cast<AVLNode*>(node->left), key, payload, log, inserted, node->id, 1);
+	else if (result > 0)
+		node->right = insertHelper(static_cast<AVLNode*>(node->right), key, payload, log, inserted, node->id, 2);
+	else
+		return node;   // duplicate rejected
+
+	return rebalance(node, log);
 }
 
 bool AVL::insert(int key, int payload, EventLog* log) {
-bool check = false;
-	AVLNode* oldRoot = static_cast<AVLNode*>(root);
-
-	AVLNode* newRoot = insertHelper(oldRoot, key, payload, log,check);
-   root = newRoot; 
-	return check;
+	bool inserted = false;
+	root = insertHelper(static_cast<AVLNode*>(root), key, payload, log, inserted, 0, 0);
+	if (log != nullptr)
+		log->add(EventTypes::DONE);
+	return inserted;
 }
 
 AVLNode* AVL::findMinHelper(AVLNode* node)
 {
-    if (node == nullptr)
-        return nullptr;
+	if (node == nullptr)
+		return nullptr;
 
-    while (node->left != nullptr)
-    {
-        node = static_cast<AVLNode*>(node->left);
-    }
+	while (node->left != nullptr)
+		node = static_cast<AVLNode*>(node->left);
 
-    return node;
+	return node;
 }
 
-bool AVL::removeHelper(TreeNode*& node, int key, EventLog* log)
+bool AVL::removeHelper(TreeNode*& node, int key, EventLog* log, int parentId, int side)
 {
-    if (node == nullptr)
-        return false;
+	if (node == nullptr)
+		return false;
 
-    AVLNode* current = static_cast<AVLNode*>(node);
+	AVLNode* current = static_cast<AVLNode*>(node);
 
-    if (log != nullptr)
-    {
-        int result = 0;
-        if (key < current->key) result = -1;
-        else if (key > current->key) result = 1;
+	int result = 0;
+	if (key < current->key) result = -1;
+	else if (key > current->key) result = 1;
 
-        log->add(EventTypes::COMPARE, node->id, key, result);
-    }
+	compareCount++;
+	if (log != nullptr)
+		log->add(EventTypes::COMPARE, current->id, key, result);
 
-    bool removed = false;
+	if (result < 0)
+	{
+		if (!removeHelper(node->left, key, log, current->id, 1))
+			return false;
+	}
+	else if (result > 0)
+	{
+		if (!removeHelper(node->right, key, log, current->id, 2))
+			return false;
+	}
+	else
+	{
+		// Leaf or single child: bypass. Ancestors rebalance on the way back up.
+		if (node->left == nullptr || node->right == nullptr)
+		{
+			TreeNode* oldNode = node;
 
-    if (key < current->key)
-    {
-        removed = removeHelper(node->left, key, log);
-    }
-    else if (key > current->key)
-    {
-        removed = removeHelper(node->right, key, log);
-    }
-    else
-    {
-        if (node->left == nullptr)
-        {
-            TreeNode* oldNode = node;
+			if (log != nullptr)
+				log->add(EventTypes::UNLINK, oldNode->id, parentId, side);
 
-            if (log != nullptr)
-                log->add(EventTypes::UNLINK, oldNode->id, 0, current->key);
+			node = (node->left != nullptr) ? node->left : node->right;
+			delete oldNode;
+			return true;
+		}
 
-            node = node->right;
-            delete oldNode;
-            return true;
-        }
+		// Two children: copy inorder successor here, then delete the successor.
+		AVLNode* successor = findMinHelper(static_cast<AVLNode*>(node->right));
+		int successorKey = successor->key;
 
-        else if (node->right == nullptr)
-        {
-            TreeNode* oldNode = node;
+		if (log != nullptr)
+			log->add(EventTypes::SWAP_VALUE, current->id, successor->id, successorKey);
 
-            if (log != nullptr)
-                log->add(EventTypes::UNLINK, oldNode->id, 0, current->key);
+		current->key = successorKey;
+		current->val = successorKey;          // val and key must stay equal
+		current->payload = successor->payload;
 
-            node = node->left;
-            delete oldNode;
-            return true;
-        }
+		if (!removeHelper(node->right, successorKey, log, current->id, 2))
+			return false;
+	}
 
-        else
-        {
-            AVLNode* successorNode =
-                findMinHelper(static_cast<AVLNode*>(node->right));
-
-            int successorKey = successorNode->key;
-            int successorPayload = successorNode->payload;
-
-            if (log != nullptr)
-            {
-                log->add(EventTypes::SWAP_VALUE,
-                    node->id, successorNode->id, successorKey);
-            }
-
-            current->key = successorKey;
-            current->payload = successorPayload;
-
-            removed = removeHelper(node->right, successorKey, log);
-        }
-    }
-
-    if (!removed)
-        return false;
-
-    if (node == nullptr)
-        return true;
-
-    current = static_cast<AVLNode*>(node);
-
-   node = rebalance(static_cast<AVLNode*>(node));
-    return true;
+	node = rebalance(static_cast<AVLNode*>(node), log);
+	return true;
 }
 
 bool AVL::remove(int key, EventLog* log)
 {
-    bool result = removeHelper(root, key, log);
-    if (log != nullptr)
-        log->add(EventTypes::DONE);
-    return result;
+	bool result = removeHelper(root, key, log, 0, 0);
+	if (log != nullptr)
+		log->add(EventTypes::DONE);
+	return result;
 }
 
-AVLNode* AVL::kthHelper(AVLNode* node, int k)
+AVLNode* AVL::kthHelper(AVLNode* node, int k, EventLog* log)
 {
-    if (node == nullptr || k <= 0 || k > getSize(node))
-        return nullptr;
+	if (node == nullptr || k <= 0 || k > getSize(node))
+		return nullptr;
 
-    int leftSize = getSize(static_cast<AVLNode*>(node->left));
+	if (log != nullptr)
+		log->add(EventTypes::VISIT, node->id);
 
-    if (k == leftSize + 1)
-        return node;
+	int leftSize = getSize(static_cast<AVLNode*>(node->left));
 
-    if (k <= leftSize)
-        return kthHelper(static_cast<AVLNode*>(node->left), k);
+	if (k == leftSize + 1)
+		return node;
 
-    return kthHelper(
-        static_cast<AVLNode*>(node->right),
-        k - leftSize - 1
-    );
+	if (k <= leftSize)
+		return kthHelper(static_cast<AVLNode*>(node->left), k, log);
+
+	return kthHelper(static_cast<AVLNode*>(node->right), k - leftSize - 1, log);
 }
 
-AVLNode* AVL::kth(int k)
+AVLNode* AVL::kth(int k, EventLog* log)
 {
-    return kthHelper(static_cast<AVLNode*>(root), k);
+	AVLNode* result = kthHelper(static_cast<AVLNode*>(root), k, log);
+	if (log != nullptr)
+		log->add(EventTypes::DONE);
+	return result;
 }
 
-int AVL::rankHelper(AVLNode* node, int key)
+int AVL::rankHelper(AVLNode* node, int key, EventLog* log)
 {
-    if (node == nullptr)
-        return 0;
+	if (node == nullptr)
+		return 0;
 
-    if (key < node->key)
-        return rankHelper(static_cast<AVLNode*>(node->left), key);
+	if (log != nullptr)
+		log->add(EventTypes::VISIT, node->id);
 
-    int leftSize = getSize(static_cast<AVLNode*>(node->left));
+	if (key < node->key)
+		return rankHelper(static_cast<AVLNode*>(node->left), key, log);
 
-    if (key == node->key)
-        return leftSize + 1;
+	int leftSize = getSize(static_cast<AVLNode*>(node->left));
 
-    return leftSize + 1 +
-        rankHelper(static_cast<AVLNode*>(node->right), key);
+	if (key == node->key)
+		return leftSize + 1;
+
+	return leftSize + 1 + rankHelper(static_cast<AVLNode*>(node->right), key, log);
 }
 
-int AVL::rank(int key)
+// Number of keys <= key
+int AVL::rank(int key, EventLog* log)
 {
-    return rankHelper(static_cast<AVLNode*>(root), key);
+	int result = rankHelper(static_cast<AVLNode*>(root), key, log);
+	if (log != nullptr)
+		log->add(EventTypes::DONE);
+	return result;
 }
 
-int AVL::countInRange(int lo, int hi)
+int AVL::countInRange(int lo, int hi, EventLog* log)
 {
-    if (lo > hi)
-        return 0;
-
-    return rank(hi) - rank(lo - 1);
+	int result = 0;
+	if (lo <= hi)
+		result = rankHelper(static_cast<AVLNode*>(root), hi, log)
+		- rankHelper(static_cast<AVLNode*>(root), lo - 1, log);
+	if (log != nullptr)
+		log->add(EventTypes::DONE);
+	return result;
 }
 
 bool AVL::isBalancedHelper(AVLNode* node)
 {
-    if (node == nullptr)
-        return true;
+	if (node == nullptr)
+		return true;
 
-    int leftHeight = getHeight(static_cast<AVLNode*>(node->left));
-    int rightHeight = getHeight(static_cast<AVLNode*>(node->right));
+	int leftHeight = getHeight(static_cast<AVLNode*>(node->left));
+	int rightHeight = getHeight(static_cast<AVLNode*>(node->right));
 
-    int actualHeight = 1 + max(leftHeight, rightHeight);
+	int actualHeight = 1 + max(leftHeight, rightHeight);
 
-    int actualSize = 1
-        + getSize(static_cast<AVLNode*>(node->left))
-        + getSize(static_cast<AVLNode*>(node->right));
+	int actualSize = 1
+		+ getSize(static_cast<AVLNode*>(node->left))
+		+ getSize(static_cast<AVLNode*>(node->right));
 
-    int balance = leftHeight - rightHeight;
+	int balance = leftHeight - rightHeight;
 
-    if (abs(balance) > 1)
-        return false;
+	if (balance > 1 || balance < -1)
+		return false;
 
-    if (node->height != actualHeight || node->size != actualSize)
-        return false;
+	if (node->height != actualHeight || node->size != actualSize)
+		return false;
 
-    return isBalancedHelper(static_cast<AVLNode*>(node->left))
-        && isBalancedHelper(static_cast<AVLNode*>(node->right));
+	return isBalancedHelper(static_cast<AVLNode*>(node->left))
+		&& isBalancedHelper(static_cast<AVLNode*>(node->right));
 }
 
 bool AVL::isBalanced()
 {
-    return isBalancedHelper(static_cast<AVLNode*>(root));
-}
-
-AVLNode* AVL::rebalance(AVLNode* node)
-{
-    if (node == nullptr)
-        return nullptr;
-
-    updateHeight(node);
-    updateSize(node);
-
-    int balance = balanceFactor(node);
-
-    if (balance > 1 &&
-        balanceFactor(static_cast<AVLNode*>(node->left)) >= 0)
-        return rotateRight(node);
-
-    if (balance > 1 &&
-        balanceFactor(static_cast<AVLNode*>(node->left)) < 0)
-    {
-        node->left = rotateLeft(
-            static_cast<AVLNode*>(node->left)
-        );
-        return rotateRight(node);
-    }
-
-    if (balance < -1 &&
-        balanceFactor(static_cast<AVLNode*>(node->right)) <= 0)
-        return rotateLeft(node);
-
-    if (balance < -1 &&
-        balanceFactor(static_cast<AVLNode*>(node->right)) > 0)
-    {
-        node->right = rotateRight(
-            static_cast<AVLNode*>(node->right)
-        );
-        return rotateLeft(node);
-    }
-
-    return node;
+	return isBalancedHelper(static_cast<AVLNode*>(root));
 }

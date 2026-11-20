@@ -19,14 +19,16 @@ struct List {
 	List(int d, int v);
 };
 
-struct stack {
+void freeList(List* head);
+
+struct StackNode {
 	TreeNode* node;
-	stack* next;
-	stack(TreeNode* n);
+	StackNode* next;
+	StackNode(TreeNode* n);
 };
 
 struct treeStack {
-	stack* top;
+	StackNode* top;
 	treeStack();
 	treeStack(TreeNode* n);
 	void push(TreeNode* n);
@@ -36,15 +38,15 @@ struct treeStack {
 	~treeStack();
 };
 
-struct queue {
+struct QueueNode {
 	TreeNode* node;
-	queue* next;
-	queue(TreeNode* n);
+	QueueNode* next;
+	QueueNode(TreeNode* n);
 };
 
 struct treeQueue {
-	queue* top;
-	queue* rear;
+	QueueNode* top;
+	QueueNode* rear;
 	treeQueue();
 	treeQueue(TreeNode* n);
 	void enqueue(TreeNode* n);
@@ -54,14 +56,15 @@ struct treeQueue {
 	~treeQueue();
 };
 
+// Convention: height() and diameter() count NODES (empty = 0, single node = 1).
 class BinaryTree {
 protected:
 	TreeNode* root;
 	int max(int a, int b);
 private:
-	
-
 	TreeNode* postRev(List*& postOrder, List* inOrder);
+
+	TreeNode* preBuildHelper(List*& preOrder, List* inOrder);
 
 	int diamCalc(TreeNode* node);
 
@@ -90,9 +93,12 @@ private:
 public:
 	BinaryTree();
 
-	TreeNode* preBuild(List*& preOrder, List* inOrder);
+	BinaryTree(const BinaryTree&) = delete;
+	BinaryTree& operator=(const BinaryTree&) = delete;
 
-	TreeNode* postBuild(List*& postOrder, List* inOrder);
+	TreeNode* preBuild(List* preOrder, List* inOrder);
+
+	TreeNode* postBuild(List* postOrder, List* inOrder);
 
 	void traverse(TreeNode* node);
 

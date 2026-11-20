@@ -2,124 +2,203 @@
 
 MaxHeap::MaxHeap() {
 	count = 0;
+	total = 0;
 	cap = 16;
 	arr = new int[cap];
 }
 
-void MaxHeap::buildMaxHeap(int* A, int n, EventLog* log){
-if (log) log->add(EventTypes::HEAP_BUILD, n);
-while (cap < n) {
-cap *= 2;
-int* temp = new int[cap];
-delete[] arr;
-arr = temp;
-}
-for(int i = 0; i < n; i++) arr[i] = A[i];
-count = n;
-if (log) log->add(EventTypes::HEAP_SIZE_CHANGE, count);
-int non_leaf = (n/2)-1;
-while (non_leaf >= 0) siftDown(non_leaf--,count,log);
-if (log) log->add(EventTypes::DONE, count);
+MaxHeap::~MaxHeap() {
+	delete[] arr;
+	arr = nullptr;
 }
 
-void MaxHeap::display() {
-	for(int i = 0; i < count; i++) cout << arr[i] << " ";
+int MaxHeap::cmp(int a, int b) {
+	if (a < b) return -1;
+	if (a > b) return 1;
+	return 0;
 }
 
-bool MaxHeap::isMaxHeap() {
-	int i = 0;
-	while (i < count - 1) {
-		int l = (2*i)+1;
-		int r = (2*i)+2;
-		if(l < count && arr[l] > arr[i]) return false;
-		if(r < count && arr[r] > arr[i]) return false;
-		i++;
+void MaxHeap::ensureCap(int n) {
+	if (n <= cap) return;
+	int newCap = cap;
+	while (newCap < n) newCap *= 2;
+	int* temp = new int[newCap];
+	for (int i = 0; i < total; i++) temp[i] = arr[i];
+	delete[] arr;
+	arr = temp;
+	cap = newCap;
+}
+
+void MaxHeap::swapValues(int i, int j) {
+	int t = arr[i];
+	arr[i] = arr[j];
+	arr[j] = t;
+}
+
+void MaxHeap::siftDownImpl(int i, int heapSize, EventLog* log) {
+	int start = i;
+	if (log) log->add(EventTypes::HEAPIFY_START, start, heapSize);
+	while (true) {
+		int l = (2 * i) + 1;
+		int r = (2 * i) + 2;
+		int largest = i;
+		if (l < heapSize) {
+			int c = cmp(arr[largest], arr[l]);
+			if (log) log->add(EventTypes::COMPARE, largest, l, c);
+			if (c < 0) largest = l;
+		}
+		if (r < heapSize) {
+			int c = cmp(arr[largest], arr[r]);
+			if (log) log->add(EventTypes::COMPARE, largest, r, c);
+			if (c < 0) largest = r;
+		}
+		if (largest == i) break;
+		if (log) log->add(EventTypes::HEAP_SWAP, i, largest, SwapReason::SIFT_DOWN);
+		swapValues(i, largest);
+		i = largest;
 	}
+	if (log) log->add(EventTypes::HEAPIFY_DONE, start, heapSize, i);
+}
+
+void MaxHeap::siftUpImpl(int i, EventLog* log) {
+	int start = i;
+	if (log) log->add(EventTypes::HEAPIFY_START, start, count);
+	while (i > 0) {
+		int p = (i - 1) / 2;
+		int c = cmp(arr[i], arr[p]);
+		if (log) log->add(EventTypes::COMPARE, i, p, c);
+		if (c > 0) {
+			if (log) log->add(EventTypes::HEAP_SWAP, i, p, SwapReason::SIFT_UP);
+			swapValues(i, p);
+			i = p;
+		}
+		else break;
+	}
+	if (log) log->add(EventTypes::HEAPIFY_DONE, start, count, i);
+}
+
+void MaxHeap::buildInternal(const int* A, int n, EventLog* log) {
+	if (n < 0) n = 0;
+	if (log) log->add(EventTypes::HEAP_BUILD, n, (n / 2) - 1);   // extra = first non-leaf index
+	ensureCap(n);
+	for (int i = 0; i < n; i++) arr[i] = A[i];
+	int old = count;
+	count = n;
+	total = n;
+	if (log) log->add(EventTypes::HEAP_SIZE_CHANGE, count, old);
+	for (int i = (n / 2) - 1; i >= 0; i--) siftDownImpl(i, count, log);
+}
+
+void MaxHeap::buildMaxHeap(int* A, int n, EventLog* log) {
+	buildInternal(A, n, log);
+	if (log) log->add(EventTypes::DONE, count);
+}
+
+void MaxHeap::loadArray(const int* A, int n) {
+	if (n < 0) n = 0;
+	ensureCap(n);
+	for (int i = 0; i < n; i++) arr[i] = A[i];
+	count = n;
+	total = n;
+}
+
+bool MaxHeap::swapAt(int i, int j, EventLog* log) {
+	if (i < 0 || j < 0 || i >= total || j >= total) return false;
+	if (log) log->add(EventTypes::HEAP_SWAP, i, j, SwapReason::MANUAL);
+	swapValues(i, j);
+	if (log) log->add(EventTypes::DONE);
 	return true;
 }
 
 void MaxHeap::siftDown(int i, int heapSize, EventLog* log) {
-if(log) log->add(EventTypes::HEAPIFY_START, i, heapSize);
-	while (true) {
-		int l = (2 * i) + 1;
-		int r = (2 * i) + 2;
-		int curr = i;
-		if (l < heapSize) {
-			if (log) log->add(EventTypes::COMPARE, curr, l, arr[l] > arr[curr]);
-			if(arr[l] > arr[curr]) curr = l;
-		}
-		if (r < heapSize) {
-			if (log) log->add(EventTypes::COMPARE, curr, r, arr[r] > arr[curr]);
-			if(arr[r] > arr[curr]) curr = r;
-		}
-		if (curr == i) break;
-		if (log) log->add(EventTypes::HEAP_SWAP, i, curr);
-		int temp = arr[i];
-		arr[i] = arr[curr];
-		arr[curr] = temp;
-		i = curr;
-	}
-	if (log) log->add(EventTypes::HEAPIFY_DONE, i, heapSize);
+	if (i < 0 || heapSize > total || i >= heapSize) return;
+	siftDownImpl(i, heapSize, log);
+	if (log) log->add(EventTypes::DONE);
 }
 
 void MaxHeap::siftUp(int i, EventLog* log) {
-	if (log) log->add(EventTypes::HEAPIFY_START, i, count);
-	while (i > 0) {
-		int j = (i - 1) / 2;
-		if (log) log->add(EventTypes::COMPARE, i, j, arr[j] < arr[i]);
-		if (arr[j] < arr[i]) {
-			if (log) log->add(EventTypes::HEAP_SWAP, j, i);
-			int temp = arr[j];
-			arr[j] = arr[i];
-			arr[i] = temp;
-			i = j;
-		}
-		else break;
-	}
-	if (log) log->add(EventTypes::HEAPIFY_DONE, i, count);
+	if (i < 0 || i >= count) return;
+	siftUpImpl(i, log);
+	if (log) log->add(EventTypes::DONE);
 }
 
-void MaxHeap::insert(int value, EventLog* log) {
-	if (count == cap) {
-		cap *= 2;
-		int* temp = new int[cap];
-		for (int i = 0; i < count; i++) temp[i] = arr[i];
-		delete[] arr;
-		arr = temp;
-	}
-	if (log) log->add(EventTypes::INSERT, value, count);
-	arr[count++] = value;
-	if (log) log->add(EventTypes::HEAP_SIZE_CHANGE, count);
-	siftUp(count-1,log);
+bool MaxHeap::insert(int value, EventLog* log) {
+	if (total > count) return false;   
+	ensureCap(count + 1);
+	if (log) log->add(EventTypes::INSERT, value, count);   
+	arr[count] = value;
+	count++;
+	total = count;
+	if (log) log->add(EventTypes::HEAP_SIZE_CHANGE, count, count - 1);
+	siftUpImpl(count - 1, log);
+	if (log) log->add(EventTypes::DONE);
+	return true;
 }
 
-int MaxHeap::extractMax(EventLog* log) {
+bool MaxHeap::extractMax(int& out, EventLog* log) {
+	if (count == 0) return false;
+	int oldSize = count;
+	out = arr[0];
+	if (log) log->add(EventTypes::EXTRACT_MAX, out, 0, oldSize);
+	count--;
 	if (count > 0) {
-		int t = arr[0];
-		if (log) log->add(EventTypes::EXTRACT_MAX, t);
-		int i = 0;
-		count--;
-		if (log) log->add(EventTypes::HEAP_SIZE_CHANGE, count);
-		arr[0] = arr[count];
-		siftDown(i,count,log);
-		return t;
+		if (log) log->add(EventTypes::HEAP_SWAP, 0, count, SwapReason::EXTRACT);
+		swapValues(0, count);
 	}
-	return -99;
+	if (log) {
+		log->add(EventTypes::MARK_SORTED, count, out);
+		log->add(EventTypes::HEAP_SIZE_CHANGE, count, oldSize);
+	}
+	if (count > 0) siftDownImpl(0, count, log);
+	if (log) log->add(EventTypes::DONE);
+	return true;
 }
 
 void MaxHeap::heapSort(int* A, int n, EventLog* log) {
-	buildMaxHeap(A,n,log);
-	int heapSize = count;
-	while (heapSize > 1) {
-		if (log) log->add(EventTypes::HEAP_SWAP, 0, heapSize-1);
-	    int temp = arr[0];
-		arr[0] = arr[heapSize-1];
-		arr[heapSize-1] = temp;
-		if (log) log->add(EventTypes::MARK_SORTED, heapSize-1, arr[heapSize-1]);
-		heapSize--;
-		if (log) log->add(EventTypes::HEAP_SIZE_CHANGE, heapSize);
-		siftDown(0,heapSize,log);
+	if (n < 0) n = 0;
+	buildInternal(A, n, log);   
+	while (count > 1) {
+		int last = count - 1;
+		if (log) {
+			log->add(EventTypes::EXTRACT_MAX, arr[0], 0, count);
+			log->add(EventTypes::HEAP_SWAP, 0, last, SwapReason::EXTRACT);
+		}
+		swapValues(0, last);
+		if (log) log->add(EventTypes::MARK_SORTED, last, arr[last]);
+		count--;
+		if (log) log->add(EventTypes::HEAP_SIZE_CHANGE, count, count + 1);
+		siftDownImpl(0, count, log);
+	}
+	if (count == 1) {   
+		if (log) log->add(EventTypes::MARK_SORTED, 0, arr[0]);
+		count = 0;
+		if (log) log->add(EventTypes::HEAP_SIZE_CHANGE, 0, 1);
 	}
 	for (int i = 0; i < n; i++) A[i] = arr[i];
-	if (log) log->add(EventTypes::HEAP_SORT_COMPLETE, n);
+	if (log) {
+		log->add(EventTypes::HEAP_SORT_COMPLETE, n);
+		log->add(EventTypes::DONE);
+	}
+}
+
+bool MaxHeap::isMaxHeap() const {
+	for (int i = 1; i < count; i++)
+		if (arr[(i - 1) / 2] < arr[i]) return false;
+	return true;
+}
+
+bool MaxHeap::isSortedRegionValid() const {
+	if (count < 0 || count > total) return false;
+	for (int i = count + 1; i < total; i++)
+		if (arr[i - 1] > arr[i]) return false;
+	if (count > 0 && total > count && arr[0] > arr[count]) return false;
+	return true;
+}
+
+bool MaxHeap::validate() const {
+	return isMaxHeap() && isSortedRegionValid();
+}
+
+void MaxHeap::display() const {
+	for (int i = 0; i < total; i++) std::cout << arr[i] << " ";
 }
