@@ -5,7 +5,8 @@ struct BSTNode : TreeNode {
     int key;
     int payload;
 
-    BSTNode(int id, int key, int payload) : TreeNode(id, key), key(key), payload(payload) {
+    BSTNode(int id, int key, int payload)
+        : TreeNode(id, key), key(key), payload(payload) {
     }
 };
 
@@ -26,11 +27,15 @@ private:
     void rangeQueryHelper(BSTNode* node, int lo, int hi, List*& tail, EventLog* log);
 
 public:
-    long long compareCount;  
+    long long compareCount;   
 
     BST();
 
     void resetStats() { compareCount = 0; }
+
+    void reset();   // delete the tree and restart node ids at 1 
+
+    void adopt(TreeNode* r, int nextId);
 
     virtual bool insert(int key, EventLog* log = nullptr);
 

@@ -159,32 +159,46 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Act2Level.cpp" />
+    <ClCompile Include="Act2Screen.cpp" />
     <ClCompile Include="AVL.cpp" />
     <ClCompile Include="BinaryTree.cpp" />
     <ClCompile Include="BST.cpp" />
     <ClCompile Include="Events.cpp" />
+    <ClCompile Include="LevelData.cpp" />
+    <ClCompile Include="LevelFile.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MaxHeap.cpp" />
     <ClCompile Include="Playback.cpp" />
     <ClCompile Include="SandboxScreen.cpp" />
+    <ClCompile Include="SaveManager.cpp" />
     <ClCompile Include="TreeMirror.cpp" />
     <ClCompile Include="TreeView.cpp" />
+    <ClCompile Include="Validator.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Act2Level.h" />
+    <ClInclude Include="Act2Screen.h" />
     <ClInclude Include="AVL.h" />
     <ClInclude Include="BinaryTree.h" />
     <ClInclude Include="BST.h" />
     <ClInclude Include="Events.h" />
+    <ClInclude Include="LevelData.h" />
+    <ClInclude Include="LevelFile.h" />
     <ClInclude Include="MaxHeap.h" />
     <ClInclude Include="Playback.h" />
+    <ClInclude Include="Progress.h" />
     <ClInclude Include="SandboxScreen.h" />
+    <ClInclude Include="SaveManager.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="TextUtil.h" />
     <ClInclude Include="TreeMirror.h" />
     <ClInclude Include="TreeView.h" />
+    <ClInclude Include="Validator.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Conventions.txt" />
+    <Text Include="LevelGuide.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

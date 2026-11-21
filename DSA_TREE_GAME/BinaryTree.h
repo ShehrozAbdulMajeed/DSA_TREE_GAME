@@ -56,7 +56,6 @@ struct treeQueue {
 	~treeQueue();
 };
 
-// Convention: height() and diameter() count NODES (empty = 0, single node = 1).
 class BinaryTree {
 protected:
 	TreeNode* root;
@@ -93,9 +92,11 @@ private:
 public:
 	BinaryTree();
 
+	// The tree owns its nodes, so copying would double-delete.
 	BinaryTree(const BinaryTree&) = delete;
 	BinaryTree& operator=(const BinaryTree&) = delete;
 
+	// Inputs are NOT modified or consumed. 
 	TreeNode* preBuild(List* preOrder, List* inOrder);
 
 	TreeNode* postBuild(List* postOrder, List* inOrder);
@@ -122,9 +123,13 @@ public:
 
 	List* inOrder_R(EventLog* log = nullptr);
 
+	// Takes ownership of node. Deletes the previous tree (if different).
 	void setTree(TreeNode* node);
 
 	TreeNode* getTree() const;
+
+	// Hands ownership of the nodes to the caller and leaves this tree empty 
+	TreeNode* releaseTree();
 
 	List* levelOrder_R(EventLog* log = nullptr);
 

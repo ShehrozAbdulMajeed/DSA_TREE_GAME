@@ -79,7 +79,7 @@ void MaxHeap::siftUpImpl(int i, EventLog* log) {
 
 void MaxHeap::buildInternal(const int* A, int n, EventLog* log) {
 	if (n < 0) n = 0;
-	if (log) log->add(EventTypes::HEAP_BUILD, n, (n / 2) - 1);   // extra = first non-leaf index
+	if (log) log->add(EventTypes::HEAP_BUILD, n, (n / 2) - 1);   
 	ensureCap(n);
 	for (int i = 0; i < n; i++) arr[i] = A[i];
 	int old = count;
@@ -100,6 +100,15 @@ void MaxHeap::loadArray(const int* A, int n) {
 	for (int i = 0; i < n; i++) arr[i] = A[i];
 	count = n;
 	total = n;
+}
+
+bool MaxHeap::restore(const int* A, int totalSize, int activeSize) {
+	if (totalSize < 0 || activeSize < 0 || activeSize > totalSize) return false;
+	ensureCap(totalSize);
+	for (int i = 0; i < totalSize; i++) arr[i] = A[i];
+	count = activeSize;
+	total = totalSize;
+	return true;
 }
 
 bool MaxHeap::swapAt(int i, int j, EventLog* log) {
@@ -123,9 +132,9 @@ void MaxHeap::siftUp(int i, EventLog* log) {
 }
 
 bool MaxHeap::insert(int value, EventLog* log) {
-	if (total > count) return false;   
+	if (total > count) return false;   // would overwrite the sorted region
 	ensureCap(count + 1);
-	if (log) log->add(EventTypes::INSERT, value, count);   
+	if (log) log->add(EventTypes::INSERT, value, count);   // (value, index)
 	arr[count] = value;
 	count++;
 	total = count;
@@ -135,6 +144,7 @@ bool MaxHeap::insert(int value, EventLog* log) {
 	return true;
 }
 
+// Swap root with last active element, move it into the sorted region, shrink, sift down.
 bool MaxHeap::extractMax(int& out, EventLog* log) {
 	if (count == 0) return false;
 	int oldSize = count;
@@ -156,7 +166,7 @@ bool MaxHeap::extractMax(int& out, EventLog* log) {
 
 void MaxHeap::heapSort(int* A, int n, EventLog* log) {
 	if (n < 0) n = 0;
-	buildInternal(A, n, log);   
+	buildInternal(A, n, log);   // no DONE in the middle of the batch
 	while (count > 1) {
 		int last = count - 1;
 		if (log) {
@@ -169,7 +179,7 @@ void MaxHeap::heapSort(int* A, int n, EventLog* log) {
 		if (log) log->add(EventTypes::HEAP_SIZE_CHANGE, count, count + 1);
 		siftDownImpl(0, count, log);
 	}
-	if (count == 1) {   
+	if (count == 1) {   // last remaining element is the minimum, already in place
 		if (log) log->add(EventTypes::MARK_SORTED, 0, arr[0]);
 		count = 0;
 		if (log) log->add(EventTypes::HEAP_SIZE_CHANGE, 0, 1);

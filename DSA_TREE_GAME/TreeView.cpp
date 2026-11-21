@@ -2,7 +2,7 @@
 #include "TextUtil.h"
 
 TreeView::TreeView(const sf::Font& font) : label(font, "", 16) {
-	ax = 0; ay = 0; aw = 800; ah = 500; showBalance = false;
+	ax = 0; ay = 0; aw = 800; ah = 500; showBalance = false; targetId = 0; hintId = 0;
 }
 
 void TreeView::drawLabel(sf::RenderTarget& rt, const char* s, unsigned size, float cx, float cy, sf::Color c) {
@@ -15,22 +15,41 @@ void TreeView::drawLabel(sf::RenderTarget& rt, const char* s, unsigned size, flo
 	rt.draw(label);
 }
 
+bool TreeView::mapOf(const TreeMirror& m, Map& mp) const {
+	if (m.count() == 0) return false;
+	float n = (float)(m.layoutWidth() > 0 ? m.layoutWidth() : 1);
+	float d = (float)(m.layoutDepth() > 1 ? m.layoutDepth() - 1 : 1);
+	mp.cellW = aw / n; if (mp.cellW > 70.0f) mp.cellW = 70.0f;
+	mp.cellH = (ah - 50.0f) / d; if (mp.cellH > 80.0f) mp.cellH = 80.0f;
+	mp.ox = ax + (aw - n * mp.cellW) / 2.0f + mp.cellW / 2.0f;
+	mp.oy = ay + 30.0f;
+	mp.radius = mp.cellW * 0.45f; if (mp.radius > 22.0f) mp.radius = 22.0f; if (mp.radius < 4.0f) mp.radius = 4.0f;
+	return true;
+}
+
+int TreeView::hitTest(const TreeMirror& m, float mx, float my) const {
+	Map mp;
+	if (!mapOf(m, mp)) return 0;
+	int best = 0; float bestD = 1e9f;
+	for (int id = 1; id < m.capacity(); id++) {
+		const VNode* v = m.node(id);
+		if (!v) continue;
+		float px = mp.ox + v->dx * mp.cellW, py = mp.oy + v->dy * mp.cellH;
+		float ddx = mx - px, ddy = my - py, d2 = ddx * ddx + ddy * ddy, r = mp.radius + 6.0f;
+		if (d2 <= r * r && d2 < bestD) { best = id; bestD = d2; }
+	}
+	return best;
+}
+
 void TreeView::draw(sf::RenderTarget& rt, const TreeMirror& m) {
-	if (m.count() == 0) {
+	Map mp;
+	if (!mapOf(m, mp)) {
 		drawLabel(rt, "(empty tree)", 20, ax + aw / 2.0f, ay + ah / 2.0f, sf::Color(120, 130, 150));
 		return;
 	}
+	float ox = mp.ox, oy = mp.oy, cellW = mp.cellW, cellH = mp.cellH, radius = mp.radius;
 
-	float n = (float)(m.layoutWidth() > 0 ? m.layoutWidth() : 1);
-	float d = (float)(m.layoutDepth() > 1 ? m.layoutDepth() - 1 : 1);
-	float cellW = aw / n; if (cellW > 70.0f) cellW = 70.0f;
-	float cellH = (ah - 50.0f) / d; if (cellH > 80.0f) cellH = 80.0f;
-	float ox = ax + (aw - n * cellW) / 2.0f + cellW / 2.0f;
-	float oy = ay + 30.0f;
-	float radius = cellW * 0.45f; if (radius > 22.0f) radius = 22.0f; if (radius < 4.0f) radius = 4.0f;
-
-	// edges first
-	for (int id = 1; id < m.capacity(); id++) {
+	for (int id = 1; id < m.capacity(); id++) {            // edges first
 		const VNode* v = m.node(id);
 		if (!v || v->parent == 0) continue;
 		const VNode* p = m.node(v->parent);
@@ -38,7 +57,7 @@ void TreeView::draw(sf::RenderTarget& rt, const TreeMirror& m) {
 		sf::Color c = (v->mark == VMark::SKIPPED) ? sf::Color(70, 70, 80) : sf::Color(150, 160, 185);
 		float x1 = ox + p->dx * cellW, y1 = oy + p->dy * cellH;
 		float x2 = ox + v->dx * cellW, y2 = oy + v->dy * cellH;
-		for (int k = -1; k <= 1; k++) {   
+		for (int k = -1; k <= 1; k++) {
 			sf::Vertex line[2];
 			line[0].position = { x1 + (float)k, y1 }; line[0].color = c;
 			line[1].position = { x2 + (float)k, y2 }; line[1].color = c;
@@ -46,7 +65,6 @@ void TreeView::draw(sf::RenderTarget& rt, const TreeMirror& m) {
 		}
 	}
 
-	// nodes
 	for (int id = 1; id < m.capacity(); id++) {
 		const VNode* v = m.node(id);
 		if (!v) continue;
@@ -54,10 +72,10 @@ void TreeView::draw(sf::RenderTarget& rt, const TreeMirror& m) {
 
 		sf::Color fill(55, 65, 95);
 		switch (v->mark) {
-		case VMark::CURRENT:  fill = sf::Color(60, 130, 235); break;   // blue  = current visit
+		case VMark::CURRENT:  fill = sf::Color(60, 130, 235); break;   // blue = current visit
 		case VMark::VISITED:  fill = sf::Color(45, 90, 150);  break;
-		case VMark::SKIPPED:  fill = sf::Color(80, 80, 90);   break;   // grey  = skipped
-		case VMark::RESULT:   fill = sf::Color(215, 170, 40); break;   // gold  = target / result
+		case VMark::SKIPPED:  fill = sf::Color(80, 80, 90);   break;   // grey = skipped by pruning
+		case VMark::RESULT:   fill = sf::Color(215, 170, 40); break;   // gold = target / result
 		case VMark::NEWNODE:  fill = sf::Color(50, 160, 100); break;
 		default: break;
 		}
@@ -77,6 +95,19 @@ void TreeView::draw(sf::RenderTarget& rt, const TreeMirror& m) {
 			drawLabel(rt, buf, radius >= 18.0f ? 16 : 12, px, py, sf::Color::White);
 		}
 
+		if (id == targetId || id == hintId) {                       // rings + text, never colour alone
+			sf::CircleShape ring(radius + 7.0f);
+			ring.setPointCount(32);
+			ring.setOrigin({ radius + 7.0f, radius + 7.0f });
+			ring.setPosition({ px, py });
+			ring.setFillColor(sf::Color::Transparent);
+			ring.setOutlineThickness(3.0f);
+			ring.setOutlineColor(id == targetId ? sf::Color(255, 205, 60) : sf::Color(80, 220, 230));
+			rt.draw(ring);
+			drawLabel(rt, id == targetId ? "TARGET" : "HINT", 11, px, py - radius - 16.0f,
+				id == targetId ? sf::Color(255, 205, 60) : sf::Color(80, 220, 230));
+		}
+
 		if (showBalance && radius >= 10.0f) {
 			int bf = m.balanceOf(id);
 			int a = bf < 0 ? -bf : bf;
@@ -90,7 +121,7 @@ void TreeView::draw(sf::RenderTarget& rt, const TreeMirror& m) {
 			badge.setOutlineColor(sf::Color::Black);
 			rt.draw(badge);
 			char t[8]; t[0] = 0;
-			if (bf > 0) tAppend(t, 8, "+");     
+			if (bf > 0) tAppend(t, 8, "+");
 			tAppendInt(t, 8, bf);
 			drawLabel(rt, t, 11, px + radius * 0.95f, py - radius * 0.95f, sf::Color::Black);
 		}

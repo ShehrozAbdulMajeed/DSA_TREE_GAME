@@ -19,6 +19,7 @@ private:
     int rankHelper(AVLNode* node, int key, EventLog* log);
     void updateHeight(AVLNode* node, EventLog* log);
     void updateSize(AVLNode* node, EventLog* log);
+    void recomputeHelper(AVLNode* node);
 public:
     long long rotationCount;   
 
@@ -40,5 +41,6 @@ public:
     int rank(int key, EventLog* log = nullptr);
     int countInRange(int lo, int hi, EventLog* log = nullptr);
     bool isBalanced();
+    void recompute();          // recalculates every height and size
     AVLNode* rebalance(AVLNode* node, EventLog* log = nullptr);
 };

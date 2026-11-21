@@ -1,0 +1,39 @@
+HOW TO ADD OR CHANGE A LEVEL  (no code change needed)
+
+Levels live in assets/levels.json (next to the executable / working folder).
+If the file is missing the game uses a built-in copy of the same data.
+
+Each level is one object inside the "levels" array:
+
+{"id":"2.1", "act":2, "type":"search", "title":"Search Heist",
+ "seed":101, "nodes":10,
+ "brief":"Text shown on the briefing screen."}
+
+Fields
+  id      label shown in the HUD ("2.1")
+  act     2 = shown by the Act 2 screen
+  type    "search" | "insert" | "remove" | "range" | "boss"
+  title   name on the level list
+  brief   briefing text (max ~300 characters)
+  seed    same seed = same tree and same target, so results are reproducible/gradable
+  nodes   number of rooms in the generated tree (1..60)
+  skew    0..100, how often the next generated key is bigger than all earlier ones
+          (higher = more lopsided tree)
+  keys    optional list, e.g. [50,30,70,20,40]. If present the tree is built by inserting
+          these keys in this order and "nodes"/"skew" are ignored (hand-made levels)
+  target  search/insert only: the key to find / insert. Omit or -1 = chosen from the seed
+  rounds  remove only: how many deletions (1..8)
+  cases   remove only: wanted case for each round: 0 leaf, 1 one child, 2 two children,
+          e.g. [0,1,2]
+  lo, hi  range only: the key range. Omit or -1 = chosen from the seed
+  shrink  boss only: seconds between each drop of the alarm capacity
+
+Optimal steps and alarm capacity are NEVER typed in: the game plays the level perfectly on
+the real BST code and derives them (capacity = ceil(1.5 x optimal) + 2).
+
+Level types
+  search  walk from the root to the target key (left/right at each room)
+  insert  walk down to the empty spot where a new key belongs
+  remove  for each target pick leaf / one child / two children, then watch the delete
+  range   click rooms to collect every key in [lo,hi]; grey rooms are pruned
+  boss    keys 1..nodes are delivered in sorted order (a corridor), then a timed search

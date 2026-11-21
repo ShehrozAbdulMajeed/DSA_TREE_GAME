@@ -1,4 +1,5 @@
 #pragma once
+// Sandbox: BST / AVL with insert, delete, search, animated by replaying model events.
 #include "Screen.h"
 #include "AVL.h"
 #include "Playback.h"
@@ -9,7 +10,7 @@ private:
 	BST bst;
 	AVL avl;
 	bool useAVL;
-	BST* cur;               
+	BST* cur;                // points at bst or avl; insert/remove are virtual
 
 	EventLog log;
 	TreeMirror mirror;
@@ -19,7 +20,7 @@ private:
 
 	char input[12];
 	int inputLen;
-	int op;                 
+	int op;                  // 0 insert, 1 delete, 2 search
 	char status[96];
 	unsigned int rngState;
 	bool wasPlaying;
@@ -30,6 +31,8 @@ private:
 	void clearTree();
 	void switchTree();
 	void verifySync();
+	void saveSandbox();
+	void loadSandbox();
 	void put(sf::RenderTarget& rt, const char* s, float x, float y, unsigned size, sf::Color c);
 public:
 	SandboxScreen(const sf::Font& font);

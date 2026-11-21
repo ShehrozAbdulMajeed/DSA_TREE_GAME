@@ -6,6 +6,19 @@ BST::BST() : BinaryTree()
     compareCount = 0;
 }
 
+void BST::reset()
+{
+    setTree(nullptr);
+    nextID = 1;
+    compareCount = 0;
+}
+
+void BST::adopt(TreeNode* r, int nextId)
+{
+    setTree(r);          // deletes the old tree
+    nextID = nextId;
+}
+
 BSTNode* BST::bstRoot() const { return static_cast<BSTNode*>(root); }
 
 bool BST::insert(int key, EventLog* log)
@@ -292,7 +305,7 @@ bool BST::removeHelper(TreeNode*& node, int key, EventLog* log, int parentId, in
     if (result > 0)
         return removeHelper(node->right, key, log, node->id, 2);
 
-    // Case 1 and 2a: no left child (leaf, or only a right child)
+    // Case 1 and 2a: no left child 
     if (node->left == nullptr)
     {
         TreeNode* old = node;
@@ -318,7 +331,7 @@ bool BST::removeHelper(TreeNode*& node, int key, EventLog* log, int parentId, in
         return true;
     }
 
-    // Case 3: two children -> copy inorder successor into this node, delete the successor
+    // Case 3: two children 
     BSTNode* target = static_cast<BSTNode*>(node);
     BSTNode* succ = findMinHelper(static_cast<BSTNode*>(node->right));
 

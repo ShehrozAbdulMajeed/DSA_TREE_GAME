@@ -72,8 +72,6 @@ AVLNode* AVL::rebalance(AVLNode* node, EventLog* log) {
 	if (bf >= -1 && bf <= 1)
 		return node;
 
-	// ROTATE(pivotId, type, newSubtreeRootId) is logged once per case, before the
-	// UPDATE_HEIGHT / UPDATE_SIZE events produced by the rotation itself.
 	if (log != nullptr)
 		log->add(EventTypes::BALANCE_ALERT, node->id, bf);
 
@@ -308,6 +306,20 @@ bool AVL::isBalancedHelper(AVLNode* node)
 
 	return isBalancedHelper(static_cast<AVLNode*>(node->left))
 		&& isBalancedHelper(static_cast<AVLNode*>(node->right));
+}
+
+void AVL::recomputeHelper(AVLNode* node)
+{
+	if (node == nullptr) return;
+	recomputeHelper(static_cast<AVLNode*>(node->left));
+	recomputeHelper(static_cast<AVLNode*>(node->right));
+	updateHeight(node, nullptr);
+	updateSize(node, nullptr);
+}
+
+void AVL::recompute()
+{
+	recomputeHelper(static_cast<AVLNode*>(root));
 }
 
 bool AVL::isBalanced()

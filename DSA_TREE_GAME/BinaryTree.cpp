@@ -309,7 +309,7 @@ TreeNode* BinaryTree::preBuild(List* preOrder, List* inOrder) {
 
 TreeNode* BinaryTree::postBuild(List* postOrder, List* inOrder) {
 	if (postOrder == nullptr || inOrder == nullptr) return nullptr;
-	// reversed copy of postorder = (root, right, left) order, which postRev expects
+	// reversed copy of postorder 
 	List* rev = nullptr;
 	for (List* c = postOrder; c != nullptr; c = c->next) {
 		List* t = new List(c->id, c->val);
@@ -425,12 +425,18 @@ TreeNode* BinaryTree::getTree() const {
 	return root;
 }
 
+TreeNode* BinaryTree::releaseTree() {
+	TreeNode* r = root;
+	root = nullptr;
+	return r;
+}
+
 List* BinaryTree::levelOrder_R(EventLog* log) {
 	if (root == nullptr) return nullptr;
 	List* temp = nullptr;
 	int h = height(root);
 	for (int level = 1; level <= h; level++)
-		levelOrder_R_H(root, temp, level, log);  
+		levelOrder_R_H(root, temp, level, log);   // prepends each visited node
 	List* prev = nullptr;
 	List* curr = temp;
 	List* next = nullptr;

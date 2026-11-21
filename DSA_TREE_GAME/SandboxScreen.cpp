@@ -1,5 +1,6 @@
 #include "SandboxScreen.h"
 #include "TextUtil.h"
+#include "SaveManager.h"
 
 SandboxScreen::SandboxScreen(const sf::Font& font) : view(font), text(font, "", 16) {
 	useAVL = false; cur = &bst;
@@ -21,7 +22,7 @@ void SandboxScreen::put(sf::RenderTarget& rt, const char* s, float x, float y, u
 
 void SandboxScreen::verifySync() {
 	if (!mirror.matchesModel(cur->getTree()))
-		tCopy(status, 96, "SYNC ERROR: drawn tree differs from model!");  
+		tCopy(status, 96, "SYNC ERROR: drawn tree differs from model!");   // dev aid
 }
 
 void SandboxScreen::runOp(int key) {
@@ -73,6 +74,32 @@ void SandboxScreen::switchTree() {
 	tCopy(status, 96, useAVL ? "Switched to AVL (tree cleared)." : "Switched to BST (tree cleared).");
 }
 
+void SandboxScreen::saveSandbox() {
+	pb.finishNow();
+	Progress p;
+	char err[96];
+	int r = SaveManager::saveGame("sandbox.sav", p, (int)rngState, cur, useAVL ? SaveManager::KIND_AVL : SaveManager::KIND_BST, nullptr, err, 96);
+	tCopy(status, 96, r == SaveResult::OK ? "Saved to sandbox.sav" : err);
+}
+
+void SandboxScreen::loadSandbox() {
+	pb.finishNow();
+	Progress p; int seed = 0, kind = 0; bool hasHeap = false; char err[96];
+	int r = SaveManager::loadGame("sandbox.sav", p, seed, &bst, &avl, kind, nullptr, hasHeap, err, 96);
+	if (r == SaveResult::NOT_FOUND) { tCopy(status, 96, "No sandbox.sav yet - press F5 to save first."); return; }
+	if (r != SaveResult::OK) { tCopy(status, 96, "Load rejected: "); tAppend(status, 96, err); return; }
+	if (kind == SaveManager::KIND_NONE) { tCopy(status, 96, "That file holds no tree."); return; }
+	useAVL = (kind == SaveManager::KIND_AVL);
+	if (useAVL) bst.reset(); else avl.reset();           // only one tree is active
+	cur = useAVL ? static_cast<BST*>(&avl) : &bst;
+	view.setShowBalance(useAVL);
+	log.clear();
+	mirror.loadFromModel(cur->getTree());
+	pb.start(&log, &mirror);
+	pb.clearLines();
+	tCopy(status, 96, "Loaded sandbox.sav (validated).");
+}
+
 void SandboxScreen::handleEvent(const sf::Event& e) {
 	if (const auto* te = e.getIf<sf::Event::TextEntered>()) {
 		unsigned c = te->unicode;
@@ -98,6 +125,8 @@ void SandboxScreen::handleEvent(const sf::Event& e) {
 		case sf::Keyboard::Key::T:      switchTree(); break;
 		case sf::Keyboard::Key::R:      randomInsert(); break;
 		case sf::Keyboard::Key::C:      clearTree(); break;
+		case sf::Keyboard::Key::F5:     saveSandbox(); break;
+		case sf::Keyboard::Key::F9:     loadSandbox(); break;
 		case sf::Keyboard::Key::Space:  pb.setPaused(!pb.isPaused()); break;
 		case sf::Keyboard::Key::Right:  pb.setPaused(true); pb.step(); break;
 		case sf::Keyboard::Key::Up:     pb.setSpeed(pb.getSpeed() * 1.5f); break;
@@ -148,6 +177,6 @@ void SandboxScreen::draw(sf::RenderWindow& w) {
 	for (int i = 0; i < pb.lineCount(); i++)
 		put(w, pb.line(i), W - 320.0f, 50.0f + 24.0f * (float)i, 14, i == 0 ? sf::Color::White : sf::Color(140, 148, 170));
 
-	put(w, "Digits+Enter: run | Tab: insert/delete/search | T: BST/AVL | R: random | C: clear | Space: pause | Right: step | Up/Down: speed",
+	put(w, "Digits+Enter: run | Tab: insert/delete/search | T: BST/AVL | R: random | C: clear | F5/F9: save/load | Space: pause | Right: step | Up/Down: speed",
 		14.0f, H - 28.0f, 13, sf::Color(120, 128, 150));
 }
