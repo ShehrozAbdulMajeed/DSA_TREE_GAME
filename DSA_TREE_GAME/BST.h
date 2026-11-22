@@ -27,7 +27,7 @@ private:
     void rangeQueryHelper(BSTNode* node, int lo, int hi, List*& tail, EventLog* log);
 
 public:
-    long long compareCount;   
+    long long compareCount;
 
     BST();
 

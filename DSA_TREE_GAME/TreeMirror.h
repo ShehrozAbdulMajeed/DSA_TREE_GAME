@@ -10,10 +10,10 @@ struct VNode {
 	int id, key;
 	int left, right, parent;     // node ids, 0 = none
 	int height, size;            // as last reported by the model 
-	float x, y;                  
-	float dx, dy;                
+	float x, y;
+	float dx, dy;
 	bool placed;
-	int mark;                    
+	int mark;
 	int cmpResult;               // last COMPARE result at this node: -1, 0, 1
 	bool alert;                  // BALANCE_ALERT raised, not yet rotated away
 	VNode();
@@ -48,11 +48,11 @@ public:
 	int getPendingKey() const { return pendingKey; }
 
 	void clear();
-	void loadFromModel(TreeNode* modelRoot);   
-	void apply(const Events& e);               
+	void loadFromModel(TreeNode* modelRoot);
+	void apply(const Events& e);
 	void clearMarks();
 	void layout();
-	void animateStep(float dt);                
+	void animateStep(float dt);
 
 	const VNode* node(int id) const { return isAlive(id) ? &nodes[id] : nullptr; }
 	int capacity() const { return cap; }

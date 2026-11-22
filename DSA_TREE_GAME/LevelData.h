@@ -6,7 +6,7 @@ struct LevelType {
 	static const int BADGES = 5, SINGLE = 6, DOUBLE = 7, PREDICT = 8, ORDER = 9, ENDLESS = 10;
 };
 
-struct Rng {                     
+struct Rng {
 	unsigned int s;
 	Rng(unsigned int seed = 1) : s(seed) {}
 	int next() { s = s * 1103515245u + 12345u; return (int)((s >> 16) & 0x7fff); }
@@ -35,4 +35,4 @@ struct LevelDef {
 
 int parseLevels(const char* text, LevelDef* out, int maxOut);
 
-extern const char* kDefaultLevelsJson;   
+extern const char* kDefaultLevelsJson;

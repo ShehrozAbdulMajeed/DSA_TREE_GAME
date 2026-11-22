@@ -4,16 +4,16 @@
 class MaxHeap {
 private:
 	int* arr;
-	int count;   
+	int count;
 	int total;   // active heap + sorted region
 	int cap;
 
 	static int cmp(int a, int b);            // -1, 0, 1
 	void ensureCap(int n);
 	void swapValues(int i, int j);
-	void siftDownImpl(int i, int heapSize, EventLog* log);   
-	void siftUpImpl(int i, EventLog* log);                   
-	void buildInternal(const int* A, int n, EventLog* log);  
+	void siftDownImpl(int i, int heapSize, EventLog* log);
+	void siftUpImpl(int i, EventLog* log);
+	void buildInternal(const int* A, int n, EventLog* log);
 
 public:
 	MaxHeap();

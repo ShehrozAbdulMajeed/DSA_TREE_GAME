@@ -13,8 +13,8 @@ public:
 	int alarm, capacity, optimal, penalties, penaltyPoints, bonus;
 	bool hintUsed;
 	char message[128];
-	int lastInsertKey;     
-	int hintId;            
+	int lastInsertKey;
+	int hintId;
 	int nodeCount;
 
 	// search / insert / boss
@@ -54,8 +54,8 @@ public:
 
 	// navigation levels (search / insert / boss): dir 1 = left, 2 = right 
 	bool move(int dir, EventLog* log);
-	bool clickNode(int id, EventLog* log);     
-	int correctDir() const;                   
+	bool clickNode(int id, EventLog* log);
+	int correctDir() const;
 
 	// remove level: 0 leaf, 1 one child, 2 two children 
 	bool answerCase(int c, EventLog* log);
@@ -65,13 +65,13 @@ public:
 
 	// --- boss ---
 	void deliverNext(EventLog* log);
-	void tick(float dt);                      
+	void tick(float dt);
 
 	void hint();
-	bool autoStep(EventLog* log);              
-	int targetNodeId();                        
+	bool autoStep(EventLog* log);
+	int targetNodeId();
 
 	int stars() const;
 	int score() const;
-	static int simulate(const LevelDef& d);    
+	static int simulate(const LevelDef& d);
 };

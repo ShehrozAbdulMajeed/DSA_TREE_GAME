@@ -95,7 +95,7 @@ void Playback::describe(const Events& e, char* b, int cap) const {
 void Playback::applyNext() {
 	const Events& e = log->get(next++);
 	char buf[96];
-	describe(e, buf, 96);          
+	describe(e, buf, 96);
 	pushLine(buf);
 	if (e.type == EventTypes::VISIT) visits++;
 	if (e.type == EventTypes::COMPARE) compares++;

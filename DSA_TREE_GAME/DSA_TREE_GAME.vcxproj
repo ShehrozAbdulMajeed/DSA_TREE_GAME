@@ -163,6 +163,8 @@
     <ClCompile Include="Act2Screen.cpp" />
     <ClCompile Include="Act3Level.cpp" />
     <ClCompile Include="Act3Screen.cpp" />
+    <ClCompile Include="ActPlaceHolderScreen.cpp" />
+    <ClCompile Include="ActTestMenu.cpp" />
     <ClCompile Include="AVL.cpp" />
     <ClCompile Include="BinaryTree.cpp" />
     <ClCompile Include="BST.cpp" />
@@ -171,6 +173,7 @@
     <ClCompile Include="LevelFile.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MaxHeap.cpp" />
+    <ClCompile Include="NavigationScreen.cpp" />
     <ClCompile Include="Playback.cpp" />
     <ClCompile Include="SandboxScreen.cpp" />
     <ClCompile Include="SaveManager.cpp" />
@@ -183,6 +186,8 @@
     <ClInclude Include="Act2Screen.h" />
     <ClInclude Include="Act3Level.h" />
     <ClInclude Include="Act3Screen.h" />
+    <ClInclude Include="ActPlaceHolderScreen.h" />
+    <ClInclude Include="ActTestMenu.h" />
     <ClInclude Include="AVL.h" />
     <ClInclude Include="BinaryTree.h" />
     <ClInclude Include="BST.h" />
@@ -190,6 +195,7 @@
     <ClInclude Include="LevelData.h" />
     <ClInclude Include="LevelFile.h" />
     <ClInclude Include="MaxHeap.h" />
+    <ClInclude Include="NavigationScreen.h" />
     <ClInclude Include="Playback.h" />
     <ClInclude Include="Progress.h" />
     <ClInclude Include="SandboxScreen.h" />

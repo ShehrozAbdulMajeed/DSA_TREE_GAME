@@ -67,7 +67,7 @@ void Act3Screen::startLevel(int i) {
 	mirror.setPendingKey(level.lastInsertKey);
 	pb.start(&log, &mirror);
 	pb.clearLines();
-	pb.setSpeed(level.def.type == LevelType::ORDER ? 3.0f : 1.0f);     
+	pb.setSpeed(level.def.type == LevelType::ORDER ? 3.0f : 1.0f);
 	view.setTargetId(0); view.setHintId(0); view.setSelectedId(0);
 	selectedId = 0; mode = PLAY; ended = false; submitted = false;
 	deliveryTimer = 0.8f; reloadTimer = 0.7f; sizeCheckPending = false; sizeBad = false; sizeNote[0] = 0;
@@ -109,11 +109,22 @@ void Act3Screen::finishLevel() {
 // input 
 
 void Act3Screen::handleEvent(const sf::Event& e) {
-	if (const auto* mm = e.getIf<sf::Event::MouseMoved>()) { mx = (float)mm->position.x; my = (float)mm->position.y; return; }
+	view.handleEvent(e);
+	if (const auto* mm = e.getIf<sf::Event::MouseMoved>()) {
+		if (const auto* mm = e.getIf<sf::Event::MouseMoved>()) {
+			mx = (float)mm->position.x * (2.0f / 3.0f);
+			my = (float)mm->position.y * (2.0f / 3.0f);
+			return;
+		}
+	}
 
 	const auto* mb = e.getIf<sf::Event::MouseButtonPressed>();
 	const auto* kp = e.getIf<sf::Event::KeyPressed>();
-	if (mb) { mx = (float)mb->position.x; my = (float)mb->position.y; }
+	if (kp && kp->code == sf::Keyboard::Key::Home) view.resetView();
+	if (mb) {
+		mx = (float)mb->position.x * (2.0f / 3.0f);
+		my = (float)mb->position.y * (2.0f / 3.0f);
+	}
 	bool click = mb && mb->button == sf::Mouse::Button::Left;
 
 	if (mode == SELECT) {
@@ -133,6 +144,10 @@ void Act3Screen::handleEvent(const sf::Event& e) {
 	}
 	else if (mode == PLAY) {
 		int type = level.def.type;
+		bool buttonsRowForView = (type == LevelType::SINGLE || type == LevelType::DOUBLE ||
+			type == LevelType::ENDLESS || type == LevelType::PREDICT);
+		float treeBottomForView = buttonsRowForView ? 120.0f : 60.0f;
+		view.setArea(10.0f, 140.0f, WIN_W - 340.0f, WIN_H - 140.0f - treeBottomForView);
 		bool live = level.state == Act3Level::PLAYING;
 		if (live && click) {
 			if (type == LevelType::SINGLE || type == LevelType::DOUBLE || type == LevelType::ENDLESS) {
@@ -209,7 +224,7 @@ void Act3Screen::update(float dt) {
 
 	if (type == LevelType::ENDLESS && level.state == Act3Level::PLAYING) {
 		if (pb.finished()) { log.clear(); if (level.tick(dt, &log)) afterAction(); }
-		else level.tick(dt, nullptr);                  
+		else level.tick(dt, nullptr);
 	}
 	pb.update(dt);
 	mirror.animateStep(dt);
@@ -235,7 +250,7 @@ void Act3Screen::update(float dt) {
 			if (level.phase == Act3Level::PH_PLAY) { pb.setSpeed(1.0f); sizeCheckPending = true; }
 		}
 	}
-	if (sizeCheckPending && pb.finished()) {           
+	if (sizeCheckPending && pb.finished()) {
 		sizeCheckPending = false;
 		int bad = mirror.firstBadAnnotation();
 		sizeBad = bad != 0;

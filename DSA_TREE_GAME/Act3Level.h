@@ -15,7 +15,7 @@ public:
 	bool hintUsed;
 	char message[128];
 	int lastInsertKey, hintId, nodeCount, round;
-	bool pendingReload;         
+	bool pendingReload;
 
 	// 3.1 badges
 	int unbalancedTotal, found;

@@ -104,11 +104,22 @@ void Act2Screen::act(bool ok) { if (ok) afterAction(); }
 // input 
 
 void Act2Screen::handleEvent(const sf::Event& e) {
-	if (const auto* mm = e.getIf<sf::Event::MouseMoved>()) { mx = (float)mm->position.x; my = (float)mm->position.y; return; }
+	view.handleEvent(e);
+	if (const auto* mm = e.getIf<sf::Event::MouseMoved>()) {
+		if (const auto* mm = e.getIf<sf::Event::MouseMoved>()) {
+			mx = (float)mm->position.x * (2.0f / 3.0f);
+			my = (float)mm->position.y * (2.0f / 3.0f);
+			return;
+		}
+	}
 
 	const auto* mb = e.getIf<sf::Event::MouseButtonPressed>();
 	const auto* kp = e.getIf<sf::Event::KeyPressed>();
-	if (mb) { mx = (float)mb->position.x; my = (float)mb->position.y; }
+	if (kp && kp->code == sf::Keyboard::Key::Home) view.resetView();
+	if (mb) {
+		mx = (float)mb->position.x * (2.0f / 3.0f);
+		my = (float)mb->position.y * (2.0f / 3.0f);
+	}
 	bool click = mb && mb->button == sf::Mouse::Button::Left;
 
 	if (mode == SELECT) {

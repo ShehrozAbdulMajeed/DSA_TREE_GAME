@@ -148,7 +148,7 @@ void Act2Level::beginImpl(const LevelDef& d, EventLog* log, bool sim) {
 
 	if (!sim) {
 		optimal = simulate(def);
-		capacity = (3 * optimal + 1) / 2 + 2;     
+		capacity = (3 * optimal + 1) / 2 + 2;
 		settle();
 	}
 }
@@ -204,7 +204,7 @@ bool Act2Level::move(int dir, EventLog* log) {
 	if (!child) {
 		if (def.type != LevelType::INSERT) return false;
 		EventLog tmp;
-		tree.insert(targetKey, &tmp);         
+		tree.insert(targetKey, &tmp);
 		lastInsertKey = targetKey;
 		copyEvents(tmp, log, true);
 		if (log) log->add(EventTypes::DONE);
@@ -318,7 +318,7 @@ void Act2Level::enterRange(TreeNode* t, EventLog* log) {
 	}
 	if (collected >= inRangeTotal) {
 		state = WON;
-		int b = 10 * (nodeCount - alarm);      
+		int b = 10 * (nodeCount - alarm);
 		bonus = b > 0 ? b : 0;
 		tCopy(message, 128, "Range cleared!");
 	}
@@ -434,7 +434,7 @@ int Act2Level::stars() const {
 	if (state != WON) return 0;
 	int s;
 	if (alarm <= optimal && penalties == 0) s = 3;
-	else if (alarm * 4 <= optimal * 5 && penalties <= 1) s = 2;     
+	else if (alarm * 4 <= optimal * 5 && penalties <= 1) s = 2;
 	else s = 1;
 	if (hintUsed && s > 2) s = 2;                                   // a hint caps the stars at 2
 	return s;

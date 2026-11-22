@@ -1,11 +1,5 @@
 #pragma once
 // Save / load 
-//   VAULT_SAVE 1
-//   STARS 2 3 2 0 0 0 0 0 0          
-//   SEED 2026
-//   TREE 1 50 30 # # 70 60 # # #     kind (0 none, 1 BST, 2 AVL) then preorder with '#' for null
-//   HEAP 6 4 9 8 5 4 3 1             total size, active heap size, then the array (incl. sorted region)
-//   END                              a file without END is treated as truncated/corrupt
 #include "AVL.h"
 #include "MaxHeap.h"
 #include "Progress.h"

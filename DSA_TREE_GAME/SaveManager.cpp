@@ -114,7 +114,7 @@ int SaveManager::saveGame(const char* path, const Progress& p, int seed,
 	return SaveResult::OK;
 }
 
-// ---------------- load ----------------
+// load 
 
 int SaveManager::loadGame(const char* path, Progress& p, int& seed,
 	BST* bstOut, AVL* avlOut, int& treeKind, MaxHeap* heapOut, bool& hasHeap, char* err, int errCap) {

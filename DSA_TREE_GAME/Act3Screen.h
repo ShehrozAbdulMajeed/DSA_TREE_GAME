@@ -48,5 +48,6 @@ public:
 	void update(float dt) override;
 	void draw(sf::RenderWindow& w) override;
 	bool exitRequested() const { return exitFlag; }
+	void clearExit() { exitFlag = false; mode = SELECT; }
 	bool progressChanged() { bool d = dirty; dirty = false; return d; }
 };

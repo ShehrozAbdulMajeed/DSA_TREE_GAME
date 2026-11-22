@@ -5,7 +5,7 @@
 int loadLevelDefs(LevelDef* out, int maxOut, const char* path) {
 	sf::FileInputStream in;
 	if (in.open(path)) {
-		auto size = in.getSize();                       
+		auto size = in.getSize();
 		if (size && *size > 0 && *size < 200000) {
 			char* buf = new char[*size + 1];
 			auto got = in.read(buf, *size);

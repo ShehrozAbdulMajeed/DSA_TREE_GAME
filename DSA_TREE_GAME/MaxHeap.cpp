@@ -79,7 +79,7 @@ void MaxHeap::siftUpImpl(int i, EventLog* log) {
 
 void MaxHeap::buildInternal(const int* A, int n, EventLog* log) {
 	if (n < 0) n = 0;
-	if (log) log->add(EventTypes::HEAP_BUILD, n, (n / 2) - 1);   
+	if (log) log->add(EventTypes::HEAP_BUILD, n, (n / 2) - 1);
 	ensureCap(n);
 	for (int i = 0; i < n; i++) arr[i] = A[i];
 	int old = count;

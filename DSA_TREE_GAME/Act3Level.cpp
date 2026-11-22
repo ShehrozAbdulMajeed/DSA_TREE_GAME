@@ -133,7 +133,7 @@ void Act3Level::setupViolationRound() {
 			if (b.search(k)) continue;
 			AVL c;
 			c.balancing = false;
-			for (int i = 0; i < nb; i++) c.insert(base[i]);          
+			for (int i = 0; i < nb; i++) c.insert(base[i]);
 			c.insert(k);
 			AVLNode* z = lowestUnbalanced(c);
 			if (!z) continue;
@@ -210,13 +210,13 @@ void Act3Level::beginImpl(const LevelDef& d, EventLog* log, bool sim) {
 		tree.balancing = true;
 		phase = PH_DELIVERY;
 		int n = def.nodes < 3 ? 3 : (def.nodes > 60 ? 60 : def.nodes);
-		for (int i = 0; i < n; i++) deliverKeys[i] = 10 * (i + 1) + rng.upto(7);   
+		for (int i = 0; i < n; i++) deliverKeys[i] = 10 * (i + 1) + rng.upto(7);
 		tCopy(message, 128, "Sorted deliveries are arriving...");
 		break;
 	}
 	case LevelType::ENDLESS:
 		buildBalanced(tree, def.nodes);
-		tree.balancing = false;            
+		tree.balancing = false;
 		tCopy(message, 128, "Operations are streaming in. Rotate to keep the vault standing.");
 		break;
 	default:
@@ -396,7 +396,7 @@ void Act3Level::deliverNext(EventLog* log) {
 	for (int i = 0; i < tmp.size(); i++) {
 		const Events& e = tmp.get(i);
 		if (e.type == EventTypes::ROTATE) deliveryRotations++;
-		if (!log || e.type == EventTypes::DONE || e.type == EventTypes::COMPARE) continue;   
+		if (!log || e.type == EventTypes::DONE || e.type == EventTypes::COMPARE) continue;
 		log->add(e.type, e.id, e.extra, e.data);
 	}
 	if (log) log->add(EventTypes::DONE);
