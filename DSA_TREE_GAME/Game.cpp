@@ -1,5 +1,6 @@
 #include "Game.h"
-#include"SeededRandom.h"
+#include "SeededRandom.h"
+
 #include <iostream>
 #include <string>
 
@@ -9,19 +10,51 @@ Game::Game()
     act1(nullptr),
     act2(nullptr),
     act3(nullptr),
-    act4(nullptr)
+    act4(nullptr),
+    treeSandbox(nullptr),
+    campaignActive(false)
 {
     window.setFramerateLimit(60);
 
     if (!font.openFromFile("arial.ttf"))
         std::cout << "Failed to load game font\n";
-        campaignSeed = 1;
-        campaignCounter = 0;
+
+    campaignSeed = 1;
+    campaignCounter = 0;
     state = MENU;
     selectedMission = 0;
+
+    menuMessage[0] = '\0';
 }
 
 Game::~Game()
+{
+    saveCampaign();
+
+    delete activeScreen;
+    activeScreen = nullptr;
+
+    act1 = nullptr;
+    act2 = nullptr;
+    act3 = nullptr;
+    act4 = nullptr;
+    treeSandbox = nullptr;
+}
+
+void Game::setMenuMessage(const char* message)
+{
+    int i = 0;
+
+    while (message && message[i] && i < 158)
+    {
+        menuMessage[i] = message[i];
+        i++;
+    }
+
+    menuMessage[i] = '\0';
+}
+
+void Game::startNewCampaign()
 {
     delete activeScreen;
     activeScreen = nullptr;
@@ -30,6 +63,110 @@ Game::~Game()
     act2 = nullptr;
     act3 = nullptr;
     act4 = nullptr;
+    treeSandbox = nullptr;
+
+    Progress freshProgress = {};
+    progress = freshProgress;
+
+    campaignActive = true;
+
+    campaignCounter++;
+
+    unsigned int clockValue =
+        static_cast<unsigned int>(
+            campaignClock.getElapsedTime().asMicroseconds()
+            );
+
+    unsigned int freshSeed =
+        clockValue ^ (campaignCounter * 0x9E3779B9);
+
+    campaignSeed = SeededRandom::deriveSeed(
+        freshSeed,
+        campaignCounter,
+        clockValue >> 3
+    );
+
+    selectedMission = 0;
+    state = CAMPAIGN;
+
+    setMenuMessage("New campaign started.");
+
+    saveCampaign();
+}
+
+void Game::saveCampaign()
+{
+    if (!campaignActive)
+        return;
+
+    char err[160];
+
+    int result = SaveManager::saveGame(
+        SAVE_PATH,
+        progress,
+        static_cast<int>(campaignSeed),
+        nullptr,
+        SaveManager::KIND_NONE,
+        nullptr,
+        err,
+        160
+    );
+
+    if (result != SaveResult::OK)
+        std::cout << "Campaign save failed: " << err << "\n";
+}
+
+void Game::loadCampaign()
+{
+    int loadedSeed = static_cast<int>(campaignSeed);
+    int treeKind = SaveManager::KIND_NONE;
+    bool hasHeap = false;
+    char err[160];
+
+    int result = SaveManager::loadGame(
+        SAVE_PATH,
+        progress,
+        loadedSeed,
+        nullptr,
+        nullptr,
+        treeKind,
+        nullptr,
+        hasHeap,
+        err,
+        160
+    );
+
+    if (result == SaveResult::OK)
+    {
+        campaignActive = true;
+        campaignSeed = static_cast<unsigned int>(loadedSeed);
+
+        delete activeScreen;
+        activeScreen = nullptr;
+
+        act1 = nullptr;
+        act2 = nullptr;
+        act3 = nullptr;
+        act4 = nullptr;
+        treeSandbox = nullptr;
+
+        selectedMission = 0;
+        state = CAMPAIGN;
+
+        setMenuMessage("Campaign loaded successfully.");
+    }
+    else if (result == SaveResult::NOT_FOUND)
+    {
+        setMenuMessage("No saved campaign found.");
+    }
+    else
+    {
+        setMenuMessage(
+            err[0] ? err : "The save file is invalid."
+        );
+    }
+
+    std::cout << menuMessage << "\n";
 }
 
 void Game::startAct1(int mission)
@@ -39,6 +176,7 @@ void Game::startAct1(int mission)
     act2 = nullptr;
     act3 = nullptr;
     act4 = nullptr;
+    treeSandbox = nullptr;
 
     unsigned int levelSeed = SeededRandom::deriveSeed(
         campaignSeed,
@@ -48,9 +186,7 @@ void Game::startAct1(int mission)
 
     act1 = new Act1Screen(window, mission, levelSeed);
 
-
     activeScreen = act1;
-
     selectedMission = mission;
     state = PLAYING;
 }
@@ -62,16 +198,21 @@ void Game::startAct2()
     act1 = nullptr;
     act3 = nullptr;
     act4 = nullptr;
+    treeSandbox = nullptr;
 
     unsigned int actSeed = SeededRandom::deriveSeed(
         campaignSeed,
-        3,
+        2,
         0
     );
 
-    act2 = new Act2Screen(font, progress, static_cast<int>(actSeed));
-    activeScreen = act2;
+    act2 = new Act2Screen(
+        font,
+        progress,
+        static_cast<int>(actSeed)
+    );
 
+    activeScreen = act2;
     state = PLAYING;
 }
 
@@ -82,7 +223,7 @@ void Game::startAct3()
     act1 = nullptr;
     act2 = nullptr;
     act4 = nullptr;
-
+    treeSandbox = nullptr;
 
     unsigned int actSeed = SeededRandom::deriveSeed(
         campaignSeed,
@@ -90,7 +231,11 @@ void Game::startAct3()
         0
     );
 
-    act3 = new Act3Screen(font, progress, static_cast<int>(actSeed));
+    act3 = new Act3Screen(
+        font,
+        progress,
+        static_cast<int>(actSeed)
+    );
 
     activeScreen = act3;
     state = PLAYING;
@@ -103,6 +248,7 @@ void Game::startAct4(int mission)
     act1 = nullptr;
     act2 = nullptr;
     act3 = nullptr;
+    treeSandbox = nullptr;
 
     unsigned int levelSeed = SeededRandom::deriveSeed(
         campaignSeed,
@@ -113,15 +259,29 @@ void Game::startAct4(int mission)
     act4 = new Act4Screen(window, mission, levelSeed);
 
     activeScreen = act4;
-
     selectedMission = mission;
     state = PLAYING;
 }
 
-void Game::returnToCampaign()
+void Game::startSandbox()
 {
     delete activeScreen;
+    activeScreen = nullptr;
 
+    act1 = nullptr;
+    act2 = nullptr;
+    act3 = nullptr;
+    act4 = nullptr;
+    treeSandbox = nullptr;
+
+    activeScreen = new SandboxScreen(window);
+
+    state = SANDBOX;
+}
+
+void Game::startTreeSandbox()
+{
+    delete activeScreen;
     activeScreen = nullptr;
 
     act1 = nullptr;
@@ -129,109 +289,142 @@ void Game::returnToCampaign()
     act3 = nullptr;
     act4 = nullptr;
 
+    treeSandbox = new TreeSandbox(font);
+
+    activeScreen = treeSandbox;
+    state = TREE_SANDBOX;
+}
+
+void Game::returnToCampaign()
+{
+    saveCampaign();
+
+    delete activeScreen;
+    activeScreen = nullptr;
+
+    act1 = nullptr;
+    act2 = nullptr;
+    act3 = nullptr;
+    act4 = nullptr;
+    treeSandbox = nullptr;
+
     state = CAMPAIGN;
+}
+
+void Game::returnToMenu()
+{
+    delete activeScreen;
+    activeScreen = nullptr;
+
+    act1 = nullptr;
+    act2 = nullptr;
+    act3 = nullptr;
+    act4 = nullptr;
+    treeSandbox = nullptr;
+
+    state = MENU;
 }
 
 void Game::handleMenuEvent(const sf::Event& e)
 {
-    if (const auto* key = e.getIf<sf::Event::KeyPressed>())
+    const auto* key = e.getIf<sf::Event::KeyPressed>();
+
+    if (!key)
+        return;
+
+    switch (key->code)
     {
-        if (key->code == sf::Keyboard::Key::Num1){
-            
-            campaignCounter++;
+    case sf::Keyboard::Key::Num1:
+        startNewCampaign();
+        break;
 
-            unsigned int clockValue =
-                static_cast<unsigned int>(
-                    campaignClock.getElapsedTime().asMicroseconds()
-                    );
+    case sf::Keyboard::Key::Num2:
+        loadCampaign();
+        break;
 
-            unsigned int freshSeed =
-                clockValue ^
-                (campaignCounter * 0x9E3779B9);
+    case sf::Keyboard::Key::Num3:
+        startSandbox();
+        break;
 
-            campaignSeed = SeededRandom::deriveSeed(
-                freshSeed,
-                campaignCounter,
-                clockValue >> 3
-            );
-            
-            
-            
-            
-            
-            
-            state = CAMPAIGN;
-            }
-        else if (key->code == sf::Keyboard::Key::Num2)
-            state = SANDBOX;
+    case sf::Keyboard::Key::Num4:
+        startTreeSandbox();
+        break;
 
-        else if (key->code == sf::Keyboard::Key::Escape ||
-            key->code == sf::Keyboard::Key::Num3)
-            window.close();
+    case sf::Keyboard::Key::Num5:
+    case sf::Keyboard::Key::Escape:
+        saveCampaign();
+        window.close();
+        break;
+
+    default:
+        break;
     }
 }
 
 void Game::handleCampaignEvent(const sf::Event& e)
 {
-    if (const auto* key = e.getIf<sf::Event::KeyPressed>())
+    const auto* key = e.getIf<sf::Event::KeyPressed>();
+
+    if (!key)
+        return;
+
+    switch (key->code)
     {
-        switch (key->code)
-        {
-        case sf::Keyboard::Key::Num1:
-            startAct1(Missions::MISSION_1_1);
-            break;
+    case sf::Keyboard::Key::Num1:
+        startAct1(Missions::MISSION_1_1);
+        break;
 
-        case sf::Keyboard::Key::Num2:
-            startAct1(Missions::MISSION_1_2);
-            break;
+    case sf::Keyboard::Key::Num2:
+        startAct1(Missions::MISSION_1_2);
+        break;
 
-        case sf::Keyboard::Key::Num3:
-            startAct1(Missions::MISSION_1_3);
-            break;
+    case sf::Keyboard::Key::Num3:
+        startAct1(Missions::MISSION_1_3);
+        break;
 
-        case sf::Keyboard::Key::Num4:
-            startAct1(Missions::MISSION_1_4);
-            break;
+    case sf::Keyboard::Key::Num4:
+        startAct1(Missions::MISSION_1_4);
+        break;
 
-        case sf::Keyboard::Key::Num5:
-            startAct1(Missions::MISSION_1_5);
-            break;
+    case sf::Keyboard::Key::Num5:
+        startAct1(Missions::MISSION_1_5);
+        break;
 
-        case sf::Keyboard::Key::Num6:
-            startAct2();
-            break;
+    case sf::Keyboard::Key::Num6:
+        startAct2();
+        break;
 
-        case sf::Keyboard::Key::Num7:
-            startAct3();
-            break;
+    case sf::Keyboard::Key::Num7:
+        startAct3();
+        break;
 
-        case sf::Keyboard::Key::F1:
-            startAct4(1);
-            break;
+    case sf::Keyboard::Key::F1:
+        startAct4(1);
+        break;
 
-        case sf::Keyboard::Key::F2:
-            startAct4(2);
-            break;
+    case sf::Keyboard::Key::F2:
+        startAct4(2);
+        break;
 
-        case sf::Keyboard::Key::F3:
-            startAct4(3);
-            break;
+    case sf::Keyboard::Key::F3:
+        startAct4(3);
+        break;
 
-        case sf::Keyboard::Key::F4:
-            startAct4(4);
-            break;
+    case sf::Keyboard::Key::F4:
+        startAct4(4);
+        break;
 
-        case sf::Keyboard::Key::F5:
-            startAct4(5);
-            break;
+    case sf::Keyboard::Key::F5:
+        startAct4(5);
+        break;
 
-        case sf::Keyboard::Key::Escape:
-            state = MENU;
-            break;
+    case sf::Keyboard::Key::Escape:
+        saveCampaign();
+        state = MENU;
+        break;
 
-        default:
-            break;
-        }
+    default:
+        break;
     }
 }
 
@@ -243,22 +436,31 @@ void Game::drawMenu()
     title.setString("VAULT HEIST");
     title.setCharacterSize(90);
     title.setFillColor(sf::Color::White);
-    title.setPosition({ 650.f, 200.f });
+    title.setPosition({ 650.f, 150.f });
 
     sf::Text options(font);
     options.setString(
-        "1. Campaign\n\n"
-        "2. Sandbox (Coming Soon)\n\n"
-        "3. Exit\n\n"
+        "1. New Campaign\n\n"
+        "2. Load Campaign\n\n"
+        "3. Sandbox - Max Heap Lab\n\n"
+        "4. Sandbox - BST / AVL Tree Lab\n\n"
+        "5. Exit\n\n"
         "Press the corresponding number"
     );
 
-    options.setCharacterSize(38);
+    options.setCharacterSize(32);
     options.setFillColor(sf::Color::White);
-    options.setPosition({ 700.f, 450.f });
+    options.setPosition({ 600.f, 340.f });
+
+    sf::Text message(font);
+    message.setString(menuMessage);
+    message.setCharacterSize(23);
+    message.setFillColor(sf::Color(255, 215, 90));
+    message.setPosition({ 600.f, 900.f });
 
     window.draw(title);
     window.draw(options);
+    window.draw(message);
 }
 
 void Game::drawCampaign()
@@ -333,9 +535,7 @@ void Game::drawCampaign()
         campaignText += "]\n";
     }
 
-    campaignText +=
-        "\n"
-        "ESC. Back to Main Menu";
+    campaignText += "\nESC. Back to Main Menu";
 
     sf::Text options(font);
     options.setString(campaignText);
@@ -357,6 +557,7 @@ void Game::run()
         {
             if (event->is<sf::Event::Closed>())
             {
+                saveCampaign();
                 window.close();
                 continue;
             }
@@ -373,13 +574,22 @@ void Game::run()
             {
                 activeScreen->handleEvent(*event);
             }
-            else if (state == SANDBOX)
+            else if (state == SANDBOX && activeScreen != nullptr)
             {
-                if (const auto* key =
-                    event->getIf<sf::Event::KeyPressed>())
+                activeScreen->handleEvent(*event);
+            }
+            else if (state == TREE_SANDBOX && activeScreen != nullptr)
+            {
+                const auto* key =
+                    event->getIf<sf::Event::KeyPressed>();
+
+                if (key && key->code == sf::Keyboard::Key::Escape)
                 {
-                    if (key->code == sf::Keyboard::Key::Escape)
-                        state = MENU;
+                    returnToMenu();
+                }
+                else
+                {
+                    activeScreen->handleEvent(*event);
                 }
             }
         }
@@ -420,7 +630,9 @@ void Game::run()
                             int stars = act1->getAlarm().getStars();
 
                             if (stars > progress.stars[1][missionIndex])
+                            {
                                 progress.stars[1][missionIndex] = stars;
+                            }
                         }
                     }
 
@@ -435,8 +647,10 @@ void Game::run()
                     returnToCampaign();
                 }
             }
-            else if (act3 != nullptr) {
-                if (act3->exitRequested()) {
+            else if (act3 != nullptr)
+            {
+                if (act3->exitRequested())
+                {
                     act3->clearExit();
                     returnToCampaign();
                 }
@@ -460,7 +674,9 @@ void Game::run()
                             int stars = act4->getAlarm().getStars();
 
                             if (stars > progress.stars[4][missionIndex])
+                            {
                                 progress.stars[4][missionIndex] = stars;
+                            }
                         }
                     }
 
@@ -468,19 +684,21 @@ void Game::run()
                 }
             }
         }
-        else if (state == SANDBOX)
+        else if (state == SANDBOX && activeScreen != nullptr)
         {
-            sf::Text message(font);
+            activeScreen->update(dt);
+            activeScreen->draw(window);
 
-            message.setString(
-                "SANDBOX\n\nComing Soon\n\nPress ESC to return"
-            );
+            SandboxScreen* sandbox =
+                static_cast<SandboxScreen*>(activeScreen);
 
-            message.setCharacterSize(55);
-            message.setFillColor(sf::Color::White);
-            message.setPosition({ 650.f, 400.f });
-
-            window.draw(message);
+            if (sandbox->exitRequested())
+                returnToMenu();
+        }
+        else if (state == TREE_SANDBOX && activeScreen != nullptr)
+        {
+            activeScreen->update(dt);
+            activeScreen->draw(window);
         }
 
         window.display();

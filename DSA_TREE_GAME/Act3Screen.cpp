@@ -26,7 +26,7 @@ Act3Screen::Act3Screen(const sf::Font& font, Progress& progress, int gameSeed)
 	ended = false; exitFlag = false; dirty = false; sizeCheckPending = false; sizeBad = false; submitted = false;
 	sizeNote[0] = 0; boardCount = 0;
 
-	std::cout << "Act 3 definitions loaded: " << defCount << "\n";
+	
 }
 
 bool Act3Screen::unlocked(int i) const { return i == 0 || prog.stars[3][i - 1] > 0; }

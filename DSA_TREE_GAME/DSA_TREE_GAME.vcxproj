@@ -160,9 +160,11 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MaxHeap.cpp" />
     <ClCompile Include="Playback.cpp" />
+    <ClCompile Include="SandboxScreen.cpp" />
     <ClCompile Include="SaveManager.cpp" />
     <ClCompile Include="StringUtil.cpp" />
     <ClCompile Include="TreeMirror.cpp" />
+    <ClCompile Include="TreeSandbox.cpp" />
     <ClCompile Include="TreeView.cpp" />
     <ClCompile Include="Validator.cpp" />
   </ItemGroup>
@@ -188,12 +190,14 @@
     <ClInclude Include="Missions.h" />
     <ClInclude Include="Playback.h" />
     <ClInclude Include="Progress.h" />
+    <ClInclude Include="SandboxScreen.h" />
     <ClInclude Include="SaveManager.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="SeededRandom.h" />
     <ClInclude Include="StringUtil.h" />
     <ClInclude Include="TextUtil.h" />
     <ClInclude Include="TreeMirror.h" />
+    <ClInclude Include="TreeSandbox.h" />
     <ClInclude Include="TreeView.h" />
     <ClInclude Include="Validator.h" />
   </ItemGroup>
