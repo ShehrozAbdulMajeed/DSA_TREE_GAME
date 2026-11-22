@@ -4,8 +4,7 @@
 #include <cstring>
 
 
-static const float ACT3_WIN_W = 1280.0f, ACT3_WIN_H = 720.0f;
-static const char* LEADERBOARD_PATH = "leaderboard.txt";
+
 
 Act3Screen::Act3Screen(const sf::Font& font, Progress& progress, int gameSeed)
 	: prog(progress), view(font), text(font, "", 16) {
@@ -26,6 +25,8 @@ Act3Screen::Act3Screen(const sf::Font& font, Progress& progress, int gameSeed)
 	mode = SELECT; sel = 0; selectedId = 0; mx = my = 0; deliveryTimer = 0; reloadTimer = 0.7f;
 	ended = false; exitFlag = false; dirty = false; sizeCheckPending = false; sizeBad = false; submitted = false;
 	sizeNote[0] = 0; boardCount = 0;
+
+	
 }
 
 bool Act3Screen::unlocked(int i) const { return i == 0 || prog.stars[3][i - 1] > 0; }
@@ -278,8 +279,18 @@ void Act3Screen::update(float dt) {
 
 // drawing 
 
-void Act3Screen::draw(sf::RenderWindow& w) {
+void Act3Screen::draw(sf::RenderWindow& w)
+{
+	sf::View logicalView(
+		sf::FloatRect(
+			{ 0.0f, 0.0f },
+			{ ACT3_WIN_W, ACT3_WIN_H }
+		)
+	);
+
+	w.setView(logicalView);
 	w.clear(sf::Color(18, 20, 30));
+
 	if (mode == SELECT) drawSelect(w);
 	else if (mode == BRIEF) drawBrief(w);
 	else if (mode == PLAY) drawPlay(w);

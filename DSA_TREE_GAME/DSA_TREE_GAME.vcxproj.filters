@@ -33,25 +33,46 @@
     <ClCompile Include="AVL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Playback.cpp">
+    <ClCompile Include="Act1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SandboxScreen.cpp">
+    <ClCompile Include="Act1Screen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TreeView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Playback.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="TreeMirror.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Act2Level.cpp">
+    <ClCompile Include="Game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Act2Screen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LevelFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="LevelData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LevelFile.cpp">
+    <ClCompile Include="Act2Level.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Act4Screen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AlarmSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Act3Level.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StringUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SaveManager.cpp">
@@ -60,21 +81,16 @@
     <ClCompile Include="Validator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Act3Level.cpp">
+    <ClCompile Include="Act3Screen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ActTestMenu.cpp">
+    <ClCompile Include="SandboxScreen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ActPlaceHolderScreen.cpp">
+    <ClCompile Include="TreeSandbox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="NavigationScreen.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  
-    <ClCompile Include="StringUtil.cpp"><Filter>Source Files</Filter></ClCompile>
-</ItemGroup>
+  </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Events.h">
       <Filter>Header Files</Filter>
@@ -88,25 +104,25 @@
     <ClInclude Include="BST.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AVL.h">
+    <ClInclude Include="Act1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Playback.h">
+    <ClInclude Include="Missions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SandboxScreen.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TreeView.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TreeMirror.h">
+    <ClInclude Include="Act1Screen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Screen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-<ClInclude Include="Act2Screen.h">
+    <ClInclude Include="Act2Screen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Progress.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Playback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Act2Level.h">
@@ -115,10 +131,46 @@
     <ClInclude Include="LevelData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TreeView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeMirror.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TextUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="LevelFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Progress.h">
+    <ClInclude Include="AVL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Act4Screen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AlarmSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SeededRandom.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Act4LevelGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Act1LevelGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Act3Level.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StringUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Act3Screen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SaveManager.h">
@@ -127,28 +179,14 @@
     <ClInclude Include="Validator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Act3Level.h">
+    <ClInclude Include="SandboxScreen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Act3Screen.h">
+    <ClInclude Include="TreeSandbox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ActTestMenu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ActPlaceHolderScreen.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NavigationScreen.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  
-    <ClInclude Include="StringUtil.h"><Filter>Header Files</Filter></ClInclude>
-</ItemGroup>
+  </ItemGroup>
   <ItemGroup>
     <Text Include="Conventions.txt" />
-    <Text Include="LevelGuide.txt">
-      <Filter>Source Files</Filter>
-    </Text>
-</ItemGroup>
+  </ItemGroup>
 </Project>

@@ -16,19 +16,20 @@ struct List {
 	int id;
 	List* next;
 	List();
-	List(int d, int v);
+	List(int d, int v, List* n = nullptr);
 };
+
 
 void freeList(List* head);
 
-struct StackNode {
+struct stack {
 	TreeNode* node;
-	StackNode* next;
-	StackNode(TreeNode* n);
+	stack* next;
+	stack(TreeNode* n);
 };
 
 struct treeStack {
-	StackNode* top;
+	stack* top;
 	treeStack();
 	treeStack(TreeNode* n);
 	void push(TreeNode* n);
@@ -38,15 +39,15 @@ struct treeStack {
 	~treeStack();
 };
 
-struct QueueNode {
+struct queue {
 	TreeNode* node;
-	QueueNode* next;
-	QueueNode(TreeNode* n);
+	queue* next;
+	queue(TreeNode* n);
 };
 
 struct treeQueue {
-	QueueNode* top;
-	QueueNode* rear;
+	queue* top;
+	queue* rear;
 	treeQueue();
 	treeQueue(TreeNode* n);
 	void enqueue(TreeNode* n);
@@ -59,11 +60,10 @@ struct treeQueue {
 class BinaryTree {
 protected:
 	TreeNode* root;
-	int max(int a, int b);
+	
 private:
+	
 	TreeNode* postRev(List*& postOrder, List* inOrder);
-
-	TreeNode* preBuildHelper(List*& preOrder, List* inOrder);
 
 	int diamCalc(TreeNode* node);
 
@@ -92,14 +92,11 @@ private:
 public:
 	BinaryTree();
 
-	// The tree owns its nodes, so copying would double-delete.
-	BinaryTree(const BinaryTree&) = delete;
-	BinaryTree& operator=(const BinaryTree&) = delete;
+	TreeNode* preBuild(List*& preOrder, List* inOrder);
 
-	// Inputs are NOT modified or consumed. 
-	TreeNode* preBuild(List* preOrder, List* inOrder);
+	TreeNode* postBuild(List*& postOrder, List* inOrder);
 
-	TreeNode* postBuild(List* postOrder, List* inOrder);
+	TreeNode* releaseTree();
 
 	void traverse(TreeNode* node);
 
@@ -123,13 +120,9 @@ public:
 
 	List* inOrder_R(EventLog* log = nullptr);
 
-	// Takes ownership of node. Deletes the previous tree (if different).
 	void setTree(TreeNode* node);
 
 	TreeNode* getTree() const;
-
-	// Hands ownership of the nodes to the caller and leaves this tree empty 
-	TreeNode* releaseTree();
 
 	List* levelOrder_R(EventLog* log = nullptr);
 
@@ -140,6 +133,8 @@ public:
 	List* postOrder_I(EventLog* log = nullptr);
 
 	List* levelOrder_I(EventLog* log = nullptr);
+
+	int max(int a, int b);
 
 	virtual ~BinaryTree();
 };

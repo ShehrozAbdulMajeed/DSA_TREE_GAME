@@ -1,7 +1,5 @@
 #include "Playback.h"
-#include "StringUtil.h"
-#include <cstring>
-
+#include "TextUtil.h"
 
 Playback::Playback() {
 	log = nullptr; mirror = nullptr; next = 0; timer = 0; speed = 1.0f; paused = false;
@@ -28,7 +26,7 @@ float Playback::duration(int type) {
 }
 
 void Playback::pushLine(const char* s) {
-	copyText(lines[lineHead], 96, s);
+	tCopy(lines[lineHead], 96, s);
 	lineHead = (lineHead + 1) % 8;
 	lineTotal++;
 }
@@ -42,54 +40,54 @@ void Playback::describe(const Events& e, char* b, int cap) const {
 	b[0] = 0;
 	switch (e.type) {
 	case EventTypes::COMPARE:
-		appendText(b, cap, "Compare "); appendInt(b, cap, e.extra);
-		appendText(b, cap, " with "); appendInt(b, cap, mirror->keyOf(e.id));
-		appendText(b, cap, e.data < 0 ? " -> go left" : (e.data > 0 ? " -> go right" : " -> match"));
+		tAppend(b, cap, "Compare "); tAppendInt(b, cap, e.extra);
+		tAppend(b, cap, " with "); tAppendInt(b, cap, mirror->keyOf(e.id));
+		tAppend(b, cap, e.data < 0 ? " -> go left" : (e.data > 0 ? " -> go right" : " -> match"));
 		break;
 	case EventTypes::VISIT:
-		appendText(b, cap, "Visit "); appendInt(b, cap, mirror->keyOf(e.id));
+		tAppend(b, cap, "Visit "); tAppendInt(b, cap, mirror->keyOf(e.id));
 		break;
 	case EventTypes::INSERT:
-		appendText(b, cap, "Insert "); appendInt(b, cap, mirror->getPendingKey());
-		if (e.extra == 0) appendText(b, cap, " as root");
+		tAppend(b, cap, "Insert "); tAppendInt(b, cap, mirror->getPendingKey());
+		if (e.extra == 0) tAppend(b, cap, " as root");
 		else {
-			appendText(b, cap, e.data == 1 ? " as left child of " : " as right child of ");
-			appendInt(b, cap, mirror->keyOf(e.extra));
+			tAppend(b, cap, e.data == 1 ? " as left child of " : " as right child of ");
+			tAppendInt(b, cap, mirror->keyOf(e.extra));
 		}
 		break;
 	case EventTypes::UNLINK:
-		appendText(b, cap, "Unlink node "); appendInt(b, cap, mirror->keyOf(e.id));
+		tAppend(b, cap, "Unlink node "); tAppendInt(b, cap, mirror->keyOf(e.id));
 		break;
 	case EventTypes::SWAP_VALUE:
-		appendText(b, cap, "Replace "); appendInt(b, cap, mirror->keyOf(e.id));
-		appendText(b, cap, " with successor "); appendInt(b, cap, e.data);
+		tAppend(b, cap, "Replace "); tAppendInt(b, cap, mirror->keyOf(e.id));
+		tAppend(b, cap, " with successor "); tAppendInt(b, cap, e.data);
 		break;
 	case EventTypes::ROTATE:
-		appendText(b, cap, "Rotate ");
-		appendText(b, cap, e.extra == RotationType::LL ? "LL" : e.extra == RotationType::RR ? "RR" : e.extra == RotationType::LR ? "LR" : "RL");
-		appendText(b, cap, " at "); appendInt(b, cap, mirror->keyOf(e.id));
+		tAppend(b, cap, "Rotate ");
+		tAppend(b, cap, e.extra == RotationType::LL ? "LL" : e.extra == RotationType::RR ? "RR" : e.extra == RotationType::LR ? "LR" : "RL");
+		tAppend(b, cap, " at "); tAppendInt(b, cap, mirror->keyOf(e.id));
 		break;
 	case EventTypes::UPDATE_HEIGHT:
-		appendText(b, cap, "Height of "); appendInt(b, cap, mirror->keyOf(e.id));
-		appendText(b, cap, ": "); appendInt(b, cap, e.extra); appendText(b, cap, " -> "); appendInt(b, cap, e.data);
+		tAppend(b, cap, "Height of "); tAppendInt(b, cap, mirror->keyOf(e.id));
+		tAppend(b, cap, ": "); tAppendInt(b, cap, e.extra); tAppend(b, cap, " -> "); tAppendInt(b, cap, e.data);
 		break;
 	case EventTypes::UPDATE_SIZE:
-		appendText(b, cap, "Size of "); appendInt(b, cap, mirror->keyOf(e.id));
-		appendText(b, cap, ": "); appendInt(b, cap, e.extra); appendText(b, cap, " -> "); appendInt(b, cap, e.data);
+		tAppend(b, cap, "Size of "); tAppendInt(b, cap, mirror->keyOf(e.id));
+		tAppend(b, cap, ": "); tAppendInt(b, cap, e.extra); tAppend(b, cap, " -> "); tAppendInt(b, cap, e.data);
 		break;
 	case EventTypes::BALANCE_ALERT:
-		appendText(b, cap, "Unbalanced at "); appendInt(b, cap, mirror->keyOf(e.id));
-		appendText(b, cap, " (balance "); appendInt(b, cap, e.extra); appendText(b, cap, ")");
+		tAppend(b, cap, "Unbalanced at "); tAppendInt(b, cap, mirror->keyOf(e.id));
+		tAppend(b, cap, " (balance "); tAppendInt(b, cap, e.extra); tAppend(b, cap, ")");
 		break;
 	case EventTypes::HIGHLIGHT_SUBTREE:
-		appendText(b, cap, e.extra == 1 ? "Skip subtree at " : e.extra == 2 ? "In range: " : "Look at ");
-		appendInt(b, cap, mirror->keyOf(e.id));
+		tAppend(b, cap, e.extra == 1 ? "Skip subtree at " : e.extra == 2 ? "In range: " : "Look at ");
+		tAppendInt(b, cap, mirror->keyOf(e.id));
 		break;
 	case EventTypes::DONE:
-		appendText(b, cap, "Done");
+		tAppend(b, cap, "Done");
 		break;
 	default:
-		appendText(b, cap, "event "); appendInt(b, cap, e.type);
+		tAppend(b, cap, "event "); tAppendInt(b, cap, e.type);
 		break;
 	}
 }

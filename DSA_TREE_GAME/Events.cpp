@@ -35,10 +35,3 @@ const Events& EventLog::get(int i) const {
 void EventLog::clear() {
 	count = 0;
 }
-void EventLog::reverse() {
-	for (int i = 0, j = count - 1; i < j; i++, j--) {
-		Events t = events[i];
-		events[i] = events[j];
-		events[j] = t;
-	}
-}

@@ -4,7 +4,7 @@
 #include <cstring>
 
 
-static const float WIN_W = 1280.0f, WIN_H = 720.0f;
+
 
 Act2Screen::Act2Screen(const sf::Font& font, Progress& progress, int gameSeed)
 	: prog(progress), view(font), text(font, "", 16) {
@@ -219,8 +219,18 @@ void Act2Screen::update(float dt) {
 
 // drawing 
 
-void Act2Screen::draw(sf::RenderWindow& w) {
+void Act2Screen::draw(sf::RenderWindow& w)
+{
+	sf::View logicalView(
+		sf::FloatRect(
+			{ 0.0f, 0.0f },
+			{ WIN_W, WIN_H }
+		)
+	);
+
+	w.setView(logicalView);
 	w.clear(sf::Color(18, 20, 30));
+
 	if (mode == SELECT) drawSelect(w);
 	else if (mode == BRIEF) drawBrief(w);
 	else if (mode == PLAY) drawPlay(w);

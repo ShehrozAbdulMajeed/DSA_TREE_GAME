@@ -20,7 +20,7 @@ List::List() {
 	next = nullptr;
 }
 
-List::List(int d, int v) {
+List::List(int d, int v, List* n) {
 	val = v;
 	id = d;
 	next = nullptr;
@@ -34,7 +34,7 @@ void freeList(List* head) {
 	}
 }
 
-StackNode::StackNode(TreeNode* n) {
+stack::stack(TreeNode* n) {
 	node = n;
 	next = nullptr;
 }
@@ -44,18 +44,18 @@ treeStack::treeStack() {
 }
 
 treeStack::treeStack(TreeNode* n) {
-	top = new StackNode(n);
+	top = new stack(n);
 }
 
 void treeStack::push(TreeNode* n) {
-	StackNode* temp = new StackNode(n);
+	stack* temp = new stack(n);
 	temp->next = top;
 	top = temp;
 }
 
 void treeStack::pop() {
 	if (top == nullptr) return;
-	StackNode* temp = top;
+	stack* temp = top;
 	top = top->next;
 	delete temp;
 	temp = nullptr;
@@ -76,7 +76,7 @@ treeStack::~treeStack() {
 		pop();
 }
 
-QueueNode::QueueNode(TreeNode* n) {
+queue::queue(TreeNode* n) {
 	node = n;
 	next = nullptr;
 }
@@ -87,12 +87,12 @@ treeQueue::treeQueue() {
 }
 
 treeQueue::treeQueue(TreeNode* n) {
-	top = new QueueNode(n);
+	top = new queue(n);
 	rear = top;
 }
 
 void treeQueue::enqueue(TreeNode* n) {
-	QueueNode* temp = new QueueNode(n);
+	queue* temp = new queue(n);
 	if (rear != nullptr) {
 		rear->next = temp;
 		rear = rear->next;
@@ -105,7 +105,7 @@ void treeQueue::enqueue(TreeNode* n) {
 
 void treeQueue::dequeue() {
 	if (top == nullptr || rear == nullptr) return;
-	QueueNode* temp = top;
+	queue* temp = top;
 	top = top->next;
 	if (top == nullptr) rear = nullptr;
 	delete temp;
@@ -231,15 +231,15 @@ void BinaryTree::preOrder_R_H(TreeNode* node, List*& link, EventLog* log) {
 	List* temp = new List(node->id, node->val);
 	temp->next = link;
 	link = temp;
-	if (log != nullptr) log->add(EventTypes::VISIT, node->id);
-	preOrder_R_H(node->left, link, log);
-	preOrder_R_H(node->right, link, log);
+	if(log != nullptr) log->add(EventTypes::VISIT, node->id);
+	preOrder_R_H(node->left, link,log);
+	preOrder_R_H(node->right, link,log);
 }
 
 void BinaryTree::postOrder_R_H(TreeNode* node, List*& link, EventLog* log) {
 	if (node == nullptr) return;
-	postOrder_R_H(node->left, link, log);
-	postOrder_R_H(node->right, link, log);
+	postOrder_R_H(node->left, link,log);
+	postOrder_R_H(node->right, link,log);
 	List* temp = new List(node->id, node->val);
 	temp->next = link;
 	link = temp;
@@ -256,18 +256,39 @@ void BinaryTree::inOrder_R_H(TreeNode* node, List*& link, EventLog* log) {
 	inOrder_R_H(node->right, link, log);
 }
 
-void BinaryTree::levelOrder_R_H(TreeNode* node, List*& link, int level, EventLog* log) {
-	if (node == nullptr) return;
-	if (level == 1) {
+void BinaryTree::levelOrder_R_H(
+	TreeNode* node, List*& link, int level, EventLog* log)
+{
+	if (node == nullptr)
+		return;
+
+	if (level == 1)
+	{
 		List* temp = new List(node->id, node->val);
-		temp->next = link;
-		link = temp;
-		if (log != nullptr) log->add(EventTypes::VISIT, node->id);
+		temp->next = nullptr;
+
+		if (link == nullptr)
+		{
+			link = temp;
+		}
+		else
+		{
+			List* curr = link;
+
+			while (curr->next != nullptr)
+				curr = curr->next;
+
+			curr->next = temp;
+		}
+
+		if (log != nullptr)
+			log->add(EventTypes::VISIT, node->id);
 	}
+
 	levelOrder_R_H(node->left, link, level - 1, log);
 	levelOrder_R_H(node->right, link, level - 1, log);
-
 }
+
 
 bool BinaryTree::checkID(TreeNode* node, int id) {
 	if (node == nullptr) return false;
@@ -282,7 +303,7 @@ BinaryTree::BinaryTree() {
 	root = nullptr;
 }
 
-TreeNode* BinaryTree::preBuildHelper(List*& preOrder, List* inOrder) {
+TreeNode* BinaryTree::preBuild(List*& preOrder, List* inOrder) {
 	if (!preOrder || !inOrder) return nullptr;
 	TreeNode* temp = new TreeNode(preOrder->id, preOrder->val);
 	preOrder = preOrder->next;
@@ -296,36 +317,39 @@ TreeNode* BinaryTree::preBuildHelper(List*& preOrder, List* inOrder) {
 	if (curr != nullptr) right = curr->next;
 	if (prev != nullptr) prev->next = nullptr;
 	else inOrder = nullptr;
-	temp->left = preBuildHelper(preOrder, inOrder);
-	temp->right = preBuildHelper(preOrder, right);
+	temp->left = preBuild(preOrder, inOrder);
+	temp->right = preBuild(preOrder, right);
 	if (prev != nullptr) prev->next = curr;
 	return temp;
 }
 
-TreeNode* BinaryTree::preBuild(List* preOrder, List* inOrder) {
-	List* cursor = preOrder;   // helper advances this copy, not the caller's list
-	return preBuildHelper(cursor, inOrder);
-}
-
-TreeNode* BinaryTree::postBuild(List* postOrder, List* inOrder) {
+TreeNode* BinaryTree::postBuild(List*& postOrder, List* inOrder) {
 	if (postOrder == nullptr || inOrder == nullptr) return nullptr;
-	// reversed copy of postorder 
-	List* rev = nullptr;
-	for (List* c = postOrder; c != nullptr; c = c->next) {
-		List* t = new List(c->id, c->val);
-		t->next = rev;
-		rev = t;
+	List* temp = new List(postOrder->id, postOrder->val);
+	List* curr_1 = postOrder;
+	List* curr_t = temp;
+	while (curr_1->next != nullptr) {
+		curr_1 = curr_1->next;
+		curr_t->next = new List(curr_1->id, curr_1->val);
+		curr_t = curr_t->next;
 	}
-	List* cursor = rev;
-	TreeNode* result = postRev(cursor, inOrder);
-	freeList(rev);
-	return result;
+	List* prev = nullptr;
+	List* curr = temp;
+	List* next = nullptr;
+	while (curr != nullptr) {
+		next = curr->next;
+		curr->next = prev;
+		prev = curr;
+		curr = next;
+	}
+	temp = prev;
+	return postRev(temp, inOrder);
 }
 
 void BinaryTree::traverse(TreeNode* node) {
 	if (node == nullptr) return;
 	traverse(node->left);
-	std::cout << node->id << " ";
+	cout << node->id << " ";
 	traverse(node->right);
 }
 
@@ -357,7 +381,7 @@ void BinaryTree::mirror() {
 }
 
 bool BinaryTree::isSymmetric() {
-	if (root == nullptr) return true;
+	if (root == nullptr) return false;
 	return isSymmetric_help(root->left, root->right);
 }
 
@@ -368,7 +392,7 @@ bool BinaryTree::isSameTree(TreeNode* a) {
 List* BinaryTree::preOrder_R(EventLog* log) {
 	if (root == nullptr) return nullptr;
 	List* temp = nullptr;
-	preOrder_R_H(root, temp, log);
+	preOrder_R_H(root, temp,log);
 	List* prev = nullptr;
 	List* curr = temp;
 	List* next = nullptr;
@@ -385,7 +409,7 @@ List* BinaryTree::preOrder_R(EventLog* log) {
 List* BinaryTree::postOrder_R(EventLog* log) {
 	if (root == nullptr) return nullptr;
 	List* temp = nullptr;
-	postOrder_R_H(root, temp, log);
+	postOrder_R_H(root, temp,log);
 	List* prev = nullptr;
 	List* curr = temp;
 	List* next = nullptr;
@@ -402,7 +426,7 @@ List* BinaryTree::postOrder_R(EventLog* log) {
 List* BinaryTree::inOrder_R(EventLog* log) {
 	if (root == nullptr) return nullptr;
 	List* temp = nullptr;
-	inOrder_R_H(root, temp, log);
+	inOrder_R_H(root, temp,log);
 	List* prev = nullptr;
 	List* curr = temp;
 	List* next = nullptr;
@@ -417,7 +441,7 @@ List* BinaryTree::inOrder_R(EventLog* log) {
 }
 
 void BinaryTree::setTree(TreeNode* node) {
-	if (root != node) destroyTree(root);
+if(root != nullptr) destroyTree(root);
 	root = node;
 }
 
@@ -425,28 +449,19 @@ TreeNode* BinaryTree::getTree() const {
 	return root;
 }
 
-TreeNode* BinaryTree::releaseTree() {
-	TreeNode* r = root;
-	root = nullptr;
-	return r;
-}
+List* BinaryTree::levelOrder_R(EventLog* log)
+{
+	if (root == nullptr)
+		return nullptr;
 
-List* BinaryTree::levelOrder_R(EventLog* log) {
-	if (root == nullptr) return nullptr;
 	List* temp = nullptr;
-	int h = height(root);
-	for (int level = 1; level <= h; level++)
-		levelOrder_R_H(root, temp, level, log);   // prepends each visited node
-	List* prev = nullptr;
-	List* curr = temp;
-	List* next = nullptr;
-	while (curr != nullptr) {
-		next = curr->next;
-		curr->next = prev;
-		prev = curr;
-		curr = next;
+
+	for (int level = 1; level <= height(root); level++)
+	{
+		levelOrder_R_H(root, temp, level, log);
 	}
-	return prev;
+
+	return temp;
 }
 
 List* BinaryTree::preOrder_I(EventLog* log) {
@@ -619,4 +634,12 @@ void BinaryTree::destroyTree(TreeNode* node)
 BinaryTree::~BinaryTree()
 {
 	destroyTree(root);
+}
+
+
+TreeNode* BinaryTree::releaseTree()
+{
+	TreeNode* temp = root;
+	root = nullptr;
+	return temp;
 }

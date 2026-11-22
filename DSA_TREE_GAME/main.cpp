@@ -1,246 +1,296 @@
-#define _CRT_SECURE_NO_WARNINGS
-#include <SFML/Graphics.hpp>
-#include <iostream>
-#include <cstring>
-#include "Act2Screen.h"
-#include "Act3Screen.h"
-#include "ActTestMenu.h"
-#include "Progress.h"
-#include "SaveManager.h"
-#include "SandboxScreen.h"
+#include "Game.h"
+#include"AVL.h"
+#include"MaxHeap.h"
+#include"Act1.h"
+#include<SFML/Graphics.hpp>
 
-// Linker workaround: compile these two screen implementations in this translation unit.
-// Their separate .cpp entries are removed from the project file below to prevent duplicate definitions.
-#include "Act2Screen.cpp"
-#include "Act3Screen.cpp"
+using namespace sf;
+int main()
+{
+    Game game;
+    game.run();
 
-static int createNewSeed(sf::Clock& seedClock, unsigned int& newGameCount, int previousSeed) {
-    unsigned int value = (unsigned int)seedClock.getElapsedTime().asMicroseconds();
-    newGameCount++;
-    value ^= newGameCount * 2654435761u;
-    if (previousSeed >= 0) value ^= (unsigned int)previousSeed * 2246822519u;
-    value ^= value >> 16;
-    value *= 2246822519u;
-    value ^= value >> 13;
-    int result = (int)(value & 0x7fffffffU);
-    if (result == 0) result = (int)newGameCount + 1;
-    if (result == previousSeed) {
-        result++;
-        if (result <= 0) result = 1;
-    }
-    return result;
-}
-
-static int getPreviousSavedSeed(const char* savePath) {
-    Progress oldProgress;
-    int oldSeed = -1;
-    int treeKind = 0;
-    bool hasHeap = false;
-    char error[96];
-    int loaded = SaveManager::loadGame(savePath, oldProgress, oldSeed, nullptr, nullptr,
-        treeKind, nullptr, hasHeap, error, 96);
-    return loaded == SaveResult::OK ? oldSeed : -1;
-}
-
-static void drawMenuButton(sf::RenderWindow& window, const sf::Font& font, const char* label, float y) {
-    sf::RectangleShape button({ 430.f, 62.f });
-    button.setPosition({ 425.f, y });
-    button.setFillColor(sf::Color(38, 51, 76));
-    button.setOutlineThickness(2.f);
-    button.setOutlineColor(sf::Color(190, 165, 95));
-    window.draw(button);
-
-    sf::Text text(font, label, 24);
-    sf::FloatRect bounds = text.getLocalBounds();
-    text.setOrigin({ bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f });
-    text.setPosition({ 640.f, y + 31.f });
-    text.setFillColor(sf::Color(245, 235, 210));
-    window.draw(text);
-}
-
-int main() {
-    sf::RenderWindow window(
-        sf::VideoMode({ 1920, 1080 }),
-        "Vault Heist - The Living Vault"
-    );
-
-    sf::View gameView(sf::FloatRect({ 0.f, 0.f }, { 1280.f, 720.f }));
-    window.setView(gameView);
-    window.setFramerateLimit(60);
-
-    sf::Font font;
-    if (!font.openFromFile("assets/font.ttf") && !font.openFromFile("C:/Windows/Fonts/arial.ttf")) {
-        std::cout << "Could not load a font. Put a .ttf at assets/font.ttf\n";
-        return 1;
-    }
-
-    const char* SAVE_PATH = "savegame.sav";
-    Progress progress;
-    int seed = 0;
-    int treeKind = 0;
-    bool hasHeap = false;
-    char err[96];
-    bool inGame = false;
-    bool inSandbox = false;
-    bool showMessage = false;
-    char message[128] = "";
-    sf::Clock seedClock;
-    unsigned int newGameCount = 0;
-
-    Act2Screen* act2 = nullptr;
-    Act3Screen* act3 = nullptr;
-    ActTestMenu* menu = nullptr;
-    SandboxScreen sandbox(font);
-    sf::Clock clock;
-
-    while (window.isOpen()) {
-        while (const std::optional<sf::Event> event = window.pollEvent()) {
-            if (event->is<sf::Event::Closed>()) {
-                window.close();
-                continue;
-            }
-
-            const sf::Event::KeyPressed* gameKey = event->getIf<sf::Event::KeyPressed>();
-
-            if (gameKey && gameKey->code == sf::Keyboard::Key::F1) {
-                inSandbox = !inSandbox;
-            }
-            else if (inSandbox) {
-                if (gameKey && gameKey->code == sf::Keyboard::Key::Escape) {
-                    inSandbox = false;
-                }
-                else {
-                    sandbox.handleEvent(*event);
-                }
-            }
-            else if (inGame) {
-                menu->handleEvent(*event);
-                if (act2->progressChanged() || act3->progressChanged()) {
-                    int saved = SaveManager::saveGame(SAVE_PATH, progress, seed, nullptr,
-                        SaveManager::KIND_NONE, nullptr, err, 96);
-                    if (saved != SaveResult::OK) std::cout << "Save failed: " << err << '\n';
-                }
-            }
-            else {
-                if (const sf::Event::KeyPressed* key = event->getIf<sf::Event::KeyPressed>()) {
-                    if (key->code == sf::Keyboard::Key::N || key->code == sf::Keyboard::Key::Enter) {
-                        progress = Progress();
-                        seed = createNewSeed(seedClock, newGameCount, getPreviousSavedSeed(SAVE_PATH));
-                        int saved = SaveManager::saveGame(SAVE_PATH, progress, seed, nullptr,
-                            SaveManager::KIND_NONE, nullptr, err, 96);
-                        if (saved != SaveResult::OK) {
-                            showMessage = true;
-                            std::strncpy(message, "Could not create the new save file.", 127);
-                            message[127] = 0;
-                        }
-                        else {
-                            showMessage = false;
-                            inGame = true;
-                        }
-                    }
-                    else if (key->code == sf::Keyboard::Key::C) {
-                        int loaded = SaveManager::loadGame(SAVE_PATH, progress, seed, nullptr, nullptr,
-                            treeKind, nullptr, hasHeap, err, 96);
-                        if (loaded == SaveResult::OK) {
-                            showMessage = false;
-                            inGame = true;
-                        }
-                        else {
-                            showMessage = true;
-                            if (loaded == SaveResult::NOT_FOUND)
-                                std::strncpy(message, "No saved game found. Choose New Game first.", 127);
-                            else
-                                std::strncpy(message, "The save file is invalid. Choose New Game to restart.", 127);
-                            message[127] = 0;
-                        }
-                    }
-                    else if (key->code == sf::Keyboard::Key::Q || key->code == sf::Keyboard::Key::Escape) {
-                        window.close();
-                    }
-                }
-
-                if (const sf::Event::MouseButtonPressed* mouse = event->getIf<sf::Event::MouseButtonPressed>()) {
-                    if (mouse->button == sf::Mouse::Button::Left) {
-                        float x = (float)mouse->position.x * (2.0f / 3.0f);
-                        float y = (float)mouse->position.y * (2.0f / 3.0f);
-                        if (x >= 425.f && x <= 855.f) {
-                            if (y >= 220.f && y <= 282.f) {
-                                progress = Progress();
-                                seed = createNewSeed(seedClock, newGameCount, getPreviousSavedSeed(SAVE_PATH));
-                                int saved = SaveManager::saveGame(SAVE_PATH, progress, seed, nullptr,
-                                    SaveManager::KIND_NONE, nullptr, err, 96);
-                                if (saved == SaveResult::OK) { showMessage = false; inGame = true; }
-                                else {
-                                    showMessage = true;
-                                    std::strncpy(message, "Could not create the new save file.", 127);
-                                    message[127] = 0;
-                                }
-                            }
-                            else if (y >= 310.f && y <= 372.f) {
-                                int loaded = SaveManager::loadGame(SAVE_PATH, progress, seed, nullptr, nullptr,
-                                    treeKind, nullptr, hasHeap, err, 96);
-                                if (loaded == SaveResult::OK) { showMessage = false; inGame = true; }
-                                else {
-                                    showMessage = true;
-                                    if (loaded == SaveResult::NOT_FOUND)
-                                        std::strncpy(message, "No saved game found. Choose New Game first.", 127);
-                                    else
-                                        std::strncpy(message, "The save file is invalid. Choose New Game to restart.", 127);
-                                    message[127] = 0;
-                                }
-                            }
-                            else if (y >= 400.f && y <= 462.f) window.close();
-                        }
-                    }
-                }
-            }
-
-            if (!window.isOpen()) break;
-            if (inGame && menu == nullptr) {
-                act2 = new Act2Screen(font, progress, seed);
-                act3 = new Act3Screen(font, progress, seed);
-                menu = new ActTestMenu(font, *act2, *act3);
-            }
-        }
-
-        float dt = clock.restart().asSeconds();
-        if (inSandbox) {
-            sandbox.update(dt);
-            sandbox.draw(window);
-        }
-        else if (inGame && menu) {
-            menu->update(dt);
-            if (act2->progressChanged() || act3->progressChanged())
-                SaveManager::saveGame(SAVE_PATH, progress, seed, nullptr, SaveManager::KIND_NONE, nullptr, err, 96);
-            menu->draw(window);
-        }
-        else {
-            window.clear(sf::Color(16, 20, 31));
-            sf::Text title(font, "VAULT HEIST: THE LIVING VAULT", 38);
-            title.setFillColor(sf::Color(255, 215, 110));
-            sf::FloatRect bounds = title.getLocalBounds();
-            title.setOrigin({ bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f });
-            title.setPosition({ 640.f, 135.f });
-            window.draw(title);
-            drawMenuButton(window, font, "NEW GAME  [N / ENTER]", 220.f);
-            drawMenuButton(window, font, "CONTINUE  [C]", 310.f);
-            drawMenuButton(window, font, "QUIT  [Q / ESC]", 400.f);
-            if (showMessage) {
-                sf::Text notice(font, message, 17);
-                notice.setFillColor(sf::Color(255, 170, 130));
-                sf::FloatRect nb = notice.getLocalBounds();
-                notice.setOrigin({ nb.position.x + nb.size.x / 2.f, nb.position.y + nb.size.y / 2.f });
-                notice.setPosition({ 640.f, 520.f });
-                window.draw(notice);
-            }
-        }
-        window.display();
-    }
-
-    if (inGame)
-        SaveManager::saveGame(SAVE_PATH, progress, seed, nullptr, SaveManager::KIND_NONE, nullptr, err, 96);
-    delete menu;
-    delete act2;
-    delete act3;
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//using namespace sf;
+//int main() {
+//	TreeNode* root = new TreeNode(1,50);
+//
+//	root->left = new TreeNode(2, 25);
+//	root->right = new TreeNode(3, 75);
+//
+//	root->left->left = new TreeNode(4, 10);
+//	root->left->right = new TreeNode(5, 30);
+//
+//	root->right->left = new TreeNode(6, 60);
+//	root->right->right = new TreeNode(7, 90);
+//
+//	root->left->right->left = new TreeNode(8, 28);
+//	root->left->right->right = new TreeNode(9,21);
+//	root->left->left->left = new TreeNode(10,34);
+//
+//	TreeNode* root2 = new TreeNode(1, 50);
+//
+//	root2->left = new TreeNode(2, 25);
+//	root2->right = new TreeNode(3, 75);
+//
+//	root2->left->left = new TreeNode(4, 10);
+//	root2->left->right = new TreeNode(5, 30);
+//
+//	root2->right->left = new TreeNode(6, 60);
+//	root2->right->right = new TreeNode(7, 90);
+//
+//	root2->left->right->left = new TreeNode(8, 28);
+//	root2->left->right->right = new TreeNode(9, 21);
+////	root2->left->left->left = new TreeNode(10, 34);
+//
+//	
+//	EventLog log;
+//
+//	BinaryTree* tt = new BinaryTree;
+//	tt->setTree(root);
+//
+//	Act1 vis(tt);
+//	vis.setEventLog(&log);
+//	vis.runTraversal(7);
+//	Clock clock;
+//	vis.setMission(Missions::MISSION_1_4);
+//	vis.startMission();
+//	vis.createSampleTarget();
+//	vis.createPlayerTree();
+//	RenderWindow window(VideoMode({1920,1080}),"Testing");
+//	while (window.isOpen()) {
+//		while (const optional event = window.pollEvent()) {
+//			if(event->is<Event::Closed>()) window.close();
+//			if (const auto* key = event->getIf<sf::Event::KeyPressed>())
+//			{
+//
+//			if(!vis.isMissionActive()){
+//				if (key->code == sf::Keyboard::Key::Space)
+//					vis.togglePlayback();
+//
+//				if (key->code == sf::Keyboard::Key::R)
+//					vis.restart();
+//
+//				if (key->code == sf::Keyboard::Key::Right)
+//					vis.nextEvent();
+//
+//				if (key->code == sf::Keyboard::Key::Left)
+//					vis.previousEvent();
+//				}
+//
+//				if (key->code == sf::Keyboard::Key::C)
+//					vis.resetCamera();
+//
+//				if(!vis.isMissionActive()){
+//				if (key->code == sf::Keyboard::Key::Num1)
+//					vis.runTraversal(1);
+//
+//				if (key->code == sf::Keyboard::Key::Num2)
+//					vis.runTraversal(2);
+//
+//				if (key->code == sf::Keyboard::Key::Num3)
+//					vis.runTraversal(3);
+//
+//				if (key->code == sf::Keyboard::Key::Num4)
+//					vis.runTraversal(4);
+//
+//				if (key->code == sf::Keyboard::Key::Num5)
+//					vis.runTraversal(5);
+//
+//				if (key->code == sf::Keyboard::Key::Num6)
+//					vis.runTraversal(6);
+//
+//				if (key->code == sf::Keyboard::Key::Num7)
+//					vis.runTraversal(7);
+//
+//				if (key->code == sf::Keyboard::Key::Num8)
+//					vis.runTraversal(8);
+//					}
+//
+//				if (key->code == sf::Keyboard::Key::M)
+//				{
+//					if (vis.isMissionActive() &&
+//						vis.getMission() == Missions::MISSION_1_5)
+//					{
+//						vis.swapMirrorNode();
+//					}
+//					else if (!vis.isMissionActive())
+//					{
+//						vis.mirrorTree();
+//					}
+//				}
+//
+//				if (key->code == sf::Keyboard::Key::P)
+//					vis.showPathToSelectedNode();
+//
+//				if (key->code == sf::Keyboard::Key::L)
+//					vis.toggleLCAMode();
+//
+//				if (key->code == sf::Keyboard::Key::S)
+//					vis.checkSymmetry();
+//
+//				if (key->code == sf::Keyboard::Key::T)
+//					vis.compareTree(root2);
+//
+//					vis.handleInputKey(key->code);
+//
+//					if (key->code == sf::Keyboard::Key::N)
+//						vis.createNewTree();
+//
+//					if (key->code == sf::Keyboard::Key::R)
+//						vis.startRootInput();
+//
+//					if (key->code == sf::Keyboard::Key::A)
+//					{
+//						if (vis.isMissionActive() &&
+//							vis.getMission() == Missions::MISSION_1_5)
+//						{
+//							vis.autoMirror();
+//						}
+//						else if (!vis.isMissionActive())
+//						{
+//							vis.startChildInput();
+//						}
+//					}
+//
+//					if (key->code == sf::Keyboard::Key::Enter)
+//					{
+//						if (vis.isMissionActive() &&
+//							vis.getMission() == Missions::MISSION_1_1)
+//						{
+//							vis.submitTraversalAnswer();
+//						}
+//						else if (vis.getMission() == Missions::MISSION_1_2) {
+//							vis.submitReconstruction();
+//						}
+//						else if (vis.getMission() == Missions::MISSION_1_3)
+//						{
+//							vis.submitHeightInput();
+//						}
+//						else if (vis.getMission() == Missions::MISSION_1_4)
+//						{
+//							if (!vis.isLCAPhaseComplete())
+//								vis.submitLCAAnswer();
+//							else
+//								vis.submitPlayerPath();
+//						}
+//						else if (vis.getMission() == Missions::MISSION_1_5)
+//						{
+//							vis.submitMirrorAnswer();
+//						}
+//						else {
+//							vis.findLCA();
+//						}
+//					}
+//			}
+//
+//			if (const auto* mouse = event->getIf<sf::Event::MouseButtonReleased>())
+//			{
+//				if (mouse->button == sf::Mouse::Button::Left)
+//				{
+//					sf::Vector2f mousePosition(
+//						static_cast<float>(mouse->position.x),
+//						static_cast<float>(mouse->position.y)
+//					);
+//					
+//					if (vis.isMissionActive() &&
+//						vis.getMission() == Missions::MISSION_1_2)
+//					{
+//						vis.dropToken(mousePosition, window);
+//					}
+//					else
+//					{
+//						vis.stopDragging();
+//					}
+//				}
+//			}
+//
+//			if (const auto* mouse = event->getIf<sf::Event::MouseMoved>())
+//			{
+//				sf::Vector2f mousePosition(
+//					static_cast<float>(mouse->position.x),
+//					static_cast<float>(mouse->position.y)
+//				);
+//				
+//				if (vis.isMissionActive() &&
+//					vis.getMission() == Missions::MISSION_1_2)
+//				{
+//					vis.updateTokenDrag(mousePosition);
+//				}
+//				else
+//				{
+//					vis.dragView(mousePosition);
+//				}
+//			}
+//
+//			if (const auto* mouse = event->getIf<sf::Event::MouseWheelScrolled>())
+//			{
+//				vis.zoom(mouse->delta);
+//			}
+//
+//			if (const auto* mouse = event->getIf<sf::Event::MouseButtonPressed>())
+//			{
+//				if (mouse->button == sf::Mouse::Button::Left)
+//				{
+//					sf::Vector2f mousePosition(
+//						static_cast<float>(mouse->position.x),
+//						static_cast<float>(mouse->position.y)
+//					);
+//					
+//					if (vis.isMissionActive() &&
+//						vis.getMission() == Missions::MISSION_1_2)
+//					{
+//						vis.startTokenDrag(mousePosition);
+//					}
+//					else
+//					{
+//						vis.startDragging(mousePosition);
+//						vis.selectNode(mousePosition, window);
+//					}
+//				}
+//			}
+//
+//			if (const auto* text = event->getIf<sf::Event::TextEntered>())
+//			{
+//				if (vis.isMissionActive() &&
+//					vis.getMission() == Missions::MISSION_1_3)
+//				{
+//					char character = static_cast<char>(
+//						event->getIf<sf::Event::TextEntered>()->unicode
+//						);
+//
+//					vis.handleHeightTextInput(character);
+//				}
+//				else
+//				{
+//					vis.handleTextInput(
+//						event->getIf<sf::Event::TextEntered>()->unicode
+//					);
+//				}
+//			}
+//		}
+//		float deltaTime = clock.restart().asSeconds();
+//		vis.update(deltaTime);
+//		window.clear(Color::Black);
+//		vis.draw(window);
+//		window.display();
+//}
+//
+//}

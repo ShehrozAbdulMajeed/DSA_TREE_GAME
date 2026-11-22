@@ -5,6 +5,7 @@
 #include "Playback.h"
 #include "TreeView.h"
 #include "Progress.h"
+#include "LevelFile.h"
 #include "SaveManager.h"
 
 class Act3Screen : public Screen {
@@ -43,6 +44,8 @@ private:
 	void drawPlay(sf::RenderWindow& w);
 	void drawResult(sf::RenderWindow& w);
 public:
+	float ACT3_WIN_W = 1280.0f, ACT3_WIN_H = 720.0f;
+	const char* LEADERBOARD_PATH = "leaderboard.txt";
 	Act3Screen(const sf::Font& font, Progress& progress, int gameSeed);
 	void handleEvent(const sf::Event& e) override;
 	void update(float dt) override;

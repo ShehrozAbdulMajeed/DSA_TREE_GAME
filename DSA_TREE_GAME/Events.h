@@ -1,5 +1,7 @@
 #pragma once
-#include <iostream>
+#include<iostream>
+#include<string>
+using namespace std;
 
 struct EventTypes {
 	static const int  VISIT = 0;
@@ -23,22 +25,6 @@ struct EventTypes {
 	static const int  DONE = 18;
 };
 
-// ROTATE event: type field
-struct RotationType {
-	static const int LL = 0;   // single right rotation
-	static const int RR = 1;   // single left rotation
-	static const int LR = 2;   // left rotation on child, then right rotation
-	static const int RL = 3;   // right rotation on child, then left rotation
-};
-
-// HEAP_SWAP event: reason field
-struct SwapReason {
-	static const int SIFT_DOWN = 0;
-	static const int SIFT_UP = 1;
-	static const int EXTRACT = 2;   // root <-> last active element
-	static const int MANUAL = 3;    // player-initiated swap
-};
-
 struct Events {
 	int type;
 	int id;
@@ -55,11 +41,24 @@ private:
 public:
 	EventLog();
 	~EventLog();
-	EventLog(const EventLog&) = delete;             // would double-delete[] events
-	EventLog& operator=(const EventLog&) = delete;
 	void add(int x, int y = 0, int z = 0, int w = 0);
 	int size() const;
 	const Events& get(int i) const;
 	void clear();
-	void reverse();                                 // reverses event order in place
+};
+
+// ROTATE event: type field
+struct RotationType {
+	static const int LL = 0;   // single right rotation
+	static const int RR = 1;   // single left rotation
+	static const int LR = 2;   // left rotation on child, then right rotation
+	static const int RL = 3;   // right rotation on child, then left rotation
+};
+
+// HEAP_SWAP event: reason field
+struct SwapReason {
+	static const int SIFT_DOWN = 0;
+	static const int SIFT_UP = 1;
+	static const int EXTRACT = 2;   // root <-> last active element
+	static const int MANUAL = 3;    // player-initiated swap
 };
