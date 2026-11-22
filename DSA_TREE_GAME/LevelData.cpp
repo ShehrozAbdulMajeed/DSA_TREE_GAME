@@ -8,7 +8,7 @@ LevelDef::LevelDef() {
 	title[0] = 0; brief[0] = 0;
 	seed = 1; nodes = 10; skew = 0; target = -1; rounds = 3;
 	for (int i = 0; i < 8; i++) cases[i] = i % 3;
-	lo = -1; hi = -1; shrink = 3; keyCount = 0;
+	lo = -1; hi = -1; shrink = 3; rate = 4; keyCount = 0;
 	for (int i = 0; i < 64; i++) keys[i] = 0;
 }
 
@@ -53,6 +53,12 @@ static void assignStr(LevelDef& d, const char* k, const char* v) {
 		else if (!strcmp(v, "remove")) d.type = LevelType::REMOVE;
 		else if (!strcmp(v, "range")) d.type = LevelType::RANGE;
 		else if (!strcmp(v, "boss")) d.type = LevelType::BOSS;
+		else if (!strcmp(v, "badges")) d.type = LevelType::BADGES;
+		else if (!strcmp(v, "single")) d.type = LevelType::SINGLE;
+		else if (!strcmp(v, "double")) d.type = LevelType::DOUBLE;
+		else if (!strcmp(v, "predict")) d.type = LevelType::PREDICT;
+		else if (!strcmp(v, "order")) d.type = LevelType::ORDER;
+		else if (!strcmp(v, "endless")) d.type = LevelType::ENDLESS;
 	}
 }
 
@@ -66,6 +72,7 @@ static void assignInt(LevelDef& d, const char* k, int v) {
 	else if (!strcmp(k, "lo")) d.lo = v;
 	else if (!strcmp(k, "hi")) d.hi = v;
 	else if (!strcmp(k, "shrink")) d.shrink = v;
+	else if (!strcmp(k, "rate")) d.rate = v;
 }
 
 static void assignArr(LevelDef& d, const char* k, const int* a, int n) {
@@ -147,6 +154,18 @@ const char* kDefaultLevelsJson = R"JSON({
  {"id":"2.4","act":2,"type":"range","title":"Range Raid","seed":404,"nodes":14,
   "brief":"Collect every treasure whose key lies in the range [lo, hi]. Click rooms next to ones you already entered. Rooms that cannot hold keys in the range turn grey: a smart thief never enters them."},
  {"id":"2.5","act":2,"type":"boss","title":"Boss: The Lazy Architect","seed":505,"nodes":12,"shrink":3,
-  "brief":"The architect receives deliveries in sorted order, so the vault becomes a corridor. Find the last treasure before the alarm capacity shrinks away. Afterwards you will see why balancing matters."}
+  "brief":"The architect receives deliveries in sorted order, so the vault becomes a corridor. Find the last treasure before the alarm capacity shrinks away. Afterwards you will see why balancing matters."},
+ {"id":"3.1","act":3,"type":"badges","title":"Read the Badges","seed":601,"nodes":12,"skew":40,
+  "brief":"Every room wears a balance badge: green means balance 0, yellow means +1 or -1, red means the room is unbalanced (balance of 2 or more either way). Click every unbalanced room. A balanced room clicked by mistake costs you."},
+ {"id":"3.2","act":3,"type":"single","title":"Single Rotations","seed":602,"nodes":10,"rounds":4,"cases":[0,1,0,1],
+  "brief":"A new room broke the balance. Find the lowest unbalanced room, select it, then rotate. Left-heavy in a straight line (LL) needs a right rotation; right-heavy in a straight line (RR) needs a left rotation. Wrong rotations cost +2 alarm and -50 points."},
+ {"id":"3.3","act":3,"type":"double","title":"Double Rotations","seed":603,"nodes":10,"rounds":4,"cases":[2,3,2,3],
+  "brief":"Zig-zag imbalance. First identify the case (LR or RL), then perform two rotations: the child first, then the unbalanced room. LR: rotate the left child left, then the room right. RL: the mirror image."},
+ {"id":"3.4","act":3,"type":"predict","title":"Auto Mode and Prediction","seed":604,"nodes":10,"rounds":6,"cases":[0,4,2,1,3,4],
+  "brief":"The vault now repairs itself. Before each insert, predict which rotation (if any) will happen: none, LL, RR, LR or RL. Then watch the repair. A wrong prediction costs +2 alarm and -50 points."},
+ {"id":"3.5","act":3,"type":"order","title":"Boss: Order-Statistic Heist","seed":605,"nodes":15,
+  "brief":"Sorted deliveries arrive again, but this vault balances itself and every room knows its subtree size. Steal the k-th most valuable treasure (k-th largest) in O(log n) steps by using the sizes. The boss checks every size after the rotations."},
+ {"id":"3.E","act":3,"type":"endless","title":"Endless Survival","seed":606,"nodes":10,"rate":4,
+  "brief":"Inserts and deletes stream in and nothing rebalances itself. Select a room and rotate to repair damage. One insert can unbalance several rooms but a single rotation can repair them. If any room reaches balance 3 (two hits before you repair), the vault collapses. Your score is how long you survive."}
 ]
 })JSON";

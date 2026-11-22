@@ -96,6 +96,8 @@ public:
 
 	TreeNode* postBuild(List*& postOrder, List* inOrder);
 
+	TreeNode* releaseTree();
+
 	void traverse(TreeNode* node);
 
 	int height(TreeNode* node);

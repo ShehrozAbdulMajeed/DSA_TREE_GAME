@@ -636,3 +636,10 @@ BinaryTree::~BinaryTree()
 	destroyTree(root);
 }
 
+
+TreeNode* BinaryTree::releaseTree()
+{
+	TreeNode* temp = root;
+	root = nullptr;
+	return temp;
+}

@@ -8,6 +8,7 @@ Game::Game()
     activeScreen(nullptr),
     act1(nullptr),
     act2(nullptr),
+    act3(nullptr),
     act4(nullptr)
 {
     window.setFramerateLimit(60);
@@ -27,6 +28,7 @@ Game::~Game()
 
     act1 = nullptr;
     act2 = nullptr;
+    act3 = nullptr;
     act4 = nullptr;
 }
 
@@ -35,6 +37,7 @@ void Game::startAct1(int mission)
     delete activeScreen;
 
     act2 = nullptr;
+    act3 = nullptr;
     act4 = nullptr;
 
     unsigned int levelSeed = SeededRandom::deriveSeed(
@@ -57,11 +60,33 @@ void Game::startAct2()
     delete activeScreen;
 
     act1 = nullptr;
+    act3 = nullptr;
     act4 = nullptr;
 
     act2 = new Act2Screen(font, progress);
     activeScreen = act2;
 
+    state = PLAYING;
+}
+
+void Game::startAct3()
+{
+    delete activeScreen;
+
+    act1 = nullptr;
+    act2 = nullptr;
+    act4 = nullptr;
+
+
+    unsigned int actSeed = SeededRandom::deriveSeed(
+        campaignSeed,
+        3,
+        0
+    );
+
+    act3 = new Act3Screen(font, progress, static_cast<int>(actSeed));
+
+    activeScreen = act3;
     state = PLAYING;
 }
 
@@ -71,6 +96,7 @@ void Game::startAct4(int mission)
 
     act1 = nullptr;
     act2 = nullptr;
+    act3 = nullptr;
 
     unsigned int levelSeed = SeededRandom::deriveSeed(
         campaignSeed,
@@ -94,6 +120,7 @@ void Game::returnToCampaign()
 
     act1 = nullptr;
     act2 = nullptr;
+    act3 = nullptr;
     act4 = nullptr;
 
     state = CAMPAIGN;
@@ -166,6 +193,10 @@ void Game::handleCampaignEvent(const sf::Event& e)
 
         case sf::Keyboard::Key::Num6:
             startAct2();
+            break;
+
+        case sf::Keyboard::Key::Num7:
+            startAct3();
             break;
 
         case sf::Keyboard::Key::F1:
@@ -266,6 +297,8 @@ void Game::drawCampaign()
         "\n"
         "ACT 2 - THE SORTED WING\n"
         "6. Enter Act 2\n\n"
+        "ACT 3 - THE AVL CHAMBER\n"
+        "7. Enter Act 3\n\n"
         "ACT 4 - THE HEAP FORTRESS\n";
 
     for (int i = 0; i < 5; i++)
@@ -393,6 +426,12 @@ void Game::run()
                 if (act2->exitRequested())
                 {
                     act2->clearExit();
+                    returnToCampaign();
+                }
+            }
+            else if (act3 != nullptr) {
+                if (act3->exitRequested()) {
+                    act3->clearExit();
                     returnToCampaign();
                 }
             }

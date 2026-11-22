@@ -7,6 +7,7 @@ private:
     int* arr;
     int count;
     int cap;
+    int sortedStart;
 
     void resize(int newCapacity);
 
@@ -19,7 +20,7 @@ public:
     MaxHeap& operator=(const MaxHeap&) = delete;
 
     void buildMaxHeap(int* A, int n, EventLog* log = nullptr);
-    bool isMaxHeap();
+    bool isMaxHeap() const;
     void display();
 
     int extractMax(EventLog* log = nullptr);
@@ -38,4 +39,12 @@ public:
     bool swapElements(int first, int second,
         EventLog* log = nullptr);
     void setValue(int index, int value);
+
+    int totalSize() const;
+    int size() const;
+    int get(int index) const;
+
+    void restore(const int* data, int total, int active);
+
+    bool isSortedRegionValid() const;
 };

@@ -55,6 +55,7 @@ void MaxHeap::buildMaxHeap(int* A, int n, EventLog* log)
         arr[i] = A[i];
 
     count = n;
+    sortedStart = count;
 
     if (log)
         log->add(EventTypes::HEAP_SIZE_CHANGE, count);
@@ -71,9 +72,9 @@ void MaxHeap::buildMaxHeap(int* A, int n, EventLog* log)
         log->add(EventTypes::DONE, count);
 }
 
-bool MaxHeap::isMaxHeap()
+bool MaxHeap::isMaxHeap() const
 {
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < sortedStart; i++)
     {
         int l = (2 * i) + 1;
         int r = (2 * i) + 2;
@@ -247,6 +248,7 @@ void MaxHeap::heapSort(int* A, int n, EventLog* log)
     buildMaxHeap(A, n, log);
 
     int heapSize = count;
+    sortedStart = heapSize;
 
     while (heapSize > 1)
     {
@@ -263,6 +265,7 @@ void MaxHeap::heapSort(int* A, int n, EventLog* log)
                 heapSize - 1, arr[heapSize - 1]);
 
         heapSize--;
+        sortedStart = heapSize;
 
         if (log)
             log->add(EventTypes::HEAP_SIZE_CHANGE, heapSize);
@@ -342,4 +345,44 @@ void MaxHeap::setValue(int index, int value)
         return;
 
     arr[index] = value;
+}
+
+int MaxHeap::totalSize() const
+{
+    return count;
+}
+
+int MaxHeap::size() const
+{
+    return count;
+}
+
+int MaxHeap::get(int index) const
+{
+    return getValue(index);
+}
+
+void MaxHeap::restore(const int* data, int total, int active)
+{
+    if (total < 0 || active < 0 || active > total)
+        return;
+
+    if (active > 0 && data == nullptr)
+        return;
+
+    setRawArray(data, active);
+}
+
+bool MaxHeap::isSortedRegionValid() const
+{
+    if (sortedStart < 0 || sortedStart > count)
+        return false;
+
+    for (int i = sortedStart + 1; i < count; i++)
+    {
+        if (arr[i - 1] > arr[i])
+            return false;
+    }
+
+    return true;
 }

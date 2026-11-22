@@ -6,6 +6,7 @@
 #include "Progress.h"
 #include "Act1Screen.h"
 #include "Act2Screen.h"
+#include"Act3Screen.h"
 #include "Act4Screen.h"
 
 class Game {
@@ -24,6 +25,7 @@ private:
 
     Act1Screen* act1;
     Act2Screen* act2;
+    Act3Screen* act3;
     Act4Screen* act4;
 
     int state;
@@ -38,6 +40,7 @@ private:
 
     void startAct1(int mission);
     void startAct2();
+    void startAct3();
     void startAct4(int mission);
 
     void returnToCampaign();

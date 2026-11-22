@@ -146,6 +146,8 @@
     <ClCompile Include="Act1Screen.cpp" />
     <ClCompile Include="Act2Level.cpp" />
     <ClCompile Include="Act2Screen.cpp" />
+    <ClCompile Include="Act3Level.cpp" />
+    <ClCompile Include="Act3Screen.cpp" />
     <ClCompile Include="Act4Screen.cpp" />
     <ClCompile Include="AlarmSystem.cpp" />
     <ClCompile Include="AVL.cpp" />
@@ -158,8 +160,11 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MaxHeap.cpp" />
     <ClCompile Include="Playback.cpp" />
+    <ClCompile Include="SaveManager.cpp" />
+    <ClCompile Include="StringUtil.cpp" />
     <ClCompile Include="TreeMirror.cpp" />
     <ClCompile Include="TreeView.cpp" />
+    <ClCompile Include="Validator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Act1.h" />
@@ -167,6 +172,8 @@
     <ClInclude Include="Act1Screen.h" />
     <ClInclude Include="Act2Level.h" />
     <ClInclude Include="Act2Screen.h" />
+    <ClInclude Include="Act3Level.h" />
+    <ClInclude Include="Act3Screen.h" />
     <ClInclude Include="Act4LevelGenerator.h" />
     <ClInclude Include="Act4Screen.h" />
     <ClInclude Include="AlarmSystem.h" />
@@ -181,11 +188,14 @@
     <ClInclude Include="Missions.h" />
     <ClInclude Include="Playback.h" />
     <ClInclude Include="Progress.h" />
+    <ClInclude Include="SaveManager.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="SeededRandom.h" />
+    <ClInclude Include="StringUtil.h" />
     <ClInclude Include="TextUtil.h" />
     <ClInclude Include="TreeMirror.h" />
     <ClInclude Include="TreeView.h" />
+    <ClInclude Include="Validator.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Conventions.txt" />
