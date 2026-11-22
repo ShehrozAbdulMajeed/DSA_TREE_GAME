@@ -145,7 +145,10 @@ void SandboxScreen::update(float dt) {
 }
 
 void SandboxScreen::draw(sf::RenderWindow& w) {
-	float W = (float)w.getSize().x, H = (float)w.getSize().y;
+	// Use the logical view size, not the physical window size.
+	// The game window is 1920x1080 but the game view is 1280x720.
+	sf::Vector2f viewSize = w.getView().getSize();
+	float W = viewSize.x, H = viewSize.y;
 	w.clear(sf::Color(18, 20, 30));
 
 	view.setArea(10.0f, 100.0f, W - 340.0f, H - 150.0f);

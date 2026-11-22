@@ -7,6 +7,10 @@
 #include "ActTestMenu.h"
 #include "Progress.h"
 #include "SaveManager.h"
+#include "SandboxScreen.h"
+
+// Linker workaround: compile these two screen implementations in this translation unit.
+// Their separate .cpp entries are removed from the project file below to prevent duplicate definitions.
 #include "Act2Screen.cpp"
 #include "Act3Screen.cpp"
 
@@ -77,6 +81,7 @@ int main() {
     bool hasHeap = false;
     char err[96];
     bool inGame = false;
+    bool inSandbox = false;
     bool showMessage = false;
     char message[128] = "";
     sf::Clock seedClock;
@@ -85,6 +90,7 @@ int main() {
     Act2Screen* act2 = nullptr;
     Act3Screen* act3 = nullptr;
     ActTestMenu* menu = nullptr;
+    SandboxScreen sandbox(font);
     sf::Clock clock;
 
     while (window.isOpen()) {
@@ -94,7 +100,20 @@ int main() {
                 continue;
             }
 
-            if (inGame) {
+            const sf::Event::KeyPressed* gameKey = event->getIf<sf::Event::KeyPressed>();
+
+            if (gameKey && gameKey->code == sf::Keyboard::Key::F1) {
+                inSandbox = !inSandbox;
+            }
+            else if (inSandbox) {
+                if (gameKey && gameKey->code == sf::Keyboard::Key::Escape) {
+                    inSandbox = false;
+                }
+                else {
+                    sandbox.handleEvent(*event);
+                }
+            }
+            else if (inGame) {
                 menu->handleEvent(*event);
                 if (act2->progressChanged() || act3->progressChanged()) {
                     int saved = SaveManager::saveGame(SAVE_PATH, progress, seed, nullptr,
@@ -185,7 +204,11 @@ int main() {
         }
 
         float dt = clock.restart().asSeconds();
-        if (inGame && menu) {
+        if (inSandbox) {
+            sandbox.update(dt);
+            sandbox.draw(window);
+        }
+        else if (inGame && menu) {
             menu->update(dt);
             if (act2->progressChanged() || act3->progressChanged())
                 SaveManager::saveGame(SAVE_PATH, progress, seed, nullptr, SaveManager::KIND_NONE, nullptr, err, 96);
