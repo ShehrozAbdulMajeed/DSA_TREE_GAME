@@ -16,8 +16,11 @@ struct List {
 	int id;
 	List* next;
 	List();
-	List(int d, int v);
+	List(int d, int v, List* n = nullptr);
 };
+
+
+void freeList(List* head);
 
 struct stack {
 	TreeNode* node;
@@ -57,10 +60,9 @@ struct treeQueue {
 class BinaryTree {
 protected:
 	TreeNode* root;
-	int max(int a, int b);
+	
 private:
 	
-
 	TreeNode* postRev(List*& postOrder, List* inOrder);
 
 	int diamCalc(TreeNode* node);
@@ -129,6 +131,8 @@ public:
 	List* postOrder_I(EventLog* log = nullptr);
 
 	List* levelOrder_I(EventLog* log = nullptr);
+
+	int max(int a, int b);
 
 	virtual ~BinaryTree();
 };

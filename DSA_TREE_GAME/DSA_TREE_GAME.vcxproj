@@ -111,10 +111,13 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\User\source\repos\SFML-3.0.0\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Users\User\source\repos\SFML-3.0.0\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -139,18 +142,50 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Act1.cpp" />
+    <ClCompile Include="Act1Screen.cpp" />
+    <ClCompile Include="Act2Level.cpp" />
+    <ClCompile Include="Act2Screen.cpp" />
+    <ClCompile Include="Act4Screen.cpp" />
+    <ClCompile Include="AlarmSystem.cpp" />
     <ClCompile Include="AVL.cpp" />
     <ClCompile Include="BinaryTree.cpp" />
     <ClCompile Include="BST.cpp" />
     <ClCompile Include="Events.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="LevelData.cpp" />
+    <ClCompile Include="LevelFile.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MaxHeap.cpp" />
+    <ClCompile Include="Playback.cpp" />
+    <ClCompile Include="TreeMirror.cpp" />
+    <ClCompile Include="TreeView.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Act1.h" />
+    <ClInclude Include="Act1LevelGenerator.h" />
+    <ClInclude Include="Act1Screen.h" />
+    <ClInclude Include="Act2Level.h" />
+    <ClInclude Include="Act2Screen.h" />
+    <ClInclude Include="Act4LevelGenerator.h" />
+    <ClInclude Include="Act4Screen.h" />
+    <ClInclude Include="AlarmSystem.h" />
+    <ClInclude Include="AVL.h" />
     <ClInclude Include="BinaryTree.h" />
     <ClInclude Include="BST.h" />
     <ClInclude Include="Events.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="LevelData.h" />
+    <ClInclude Include="LevelFile.h" />
     <ClInclude Include="MaxHeap.h" />
+    <ClInclude Include="Missions.h" />
+    <ClInclude Include="Playback.h" />
+    <ClInclude Include="Progress.h" />
+    <ClInclude Include="Screen.h" />
+    <ClInclude Include="SeededRandom.h" />
+    <ClInclude Include="TextUtil.h" />
+    <ClInclude Include="TreeMirror.h" />
+    <ClInclude Include="TreeView.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Conventions.txt" />

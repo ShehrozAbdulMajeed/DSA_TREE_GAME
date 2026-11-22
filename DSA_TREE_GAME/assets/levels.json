@@ -1,0 +1,14 @@
+{
+"levels": [
+ {"id":"2.1","act":2,"type":"search","title":"Search Heist","seed":101,"nodes":10,
+  "brief":"Slip into the vault and reach the target room. At every room compare the target key with the room's key: smaller means go left, larger means go right. Every room you enter raises the alarm, so do not wander."},
+ {"id":"2.2","act":2,"type":"insert","title":"Stash Loot","seed":202,"nodes":9,
+  "brief":"You are carrying a new treasure. Walk down the tree choosing left or right until you reach the empty spot where it belongs, and the new room will appear there. Duplicates are never allowed in a BST."},
+ {"id":"2.3","act":2,"type":"remove","title":"Steal and Collapse","seed":303,"nodes":12,"rounds":3,"cases":[0,1,2],
+  "brief":"Steal treasures and the rooms collapse. For each target, decide which case applies: a leaf, one child, or two children. With two children the inorder successor (smallest key on the right) takes its place."},
+ {"id":"2.4","act":2,"type":"range","title":"Range Raid","seed":404,"nodes":14,
+  "brief":"Collect every treasure whose key lies in the range [lo, hi]. Click rooms next to ones you already entered. Rooms that cannot hold keys in the range turn grey: a smart thief never enters them."},
+ {"id":"2.5","act":2,"type":"boss","title":"Boss: The Lazy Architect","seed":505,"nodes":12,"shrink":3,
+  "brief":"The architect receives deliveries in sorted order, so the vault becomes a corridor. Find the last treasure before the alarm capacity shrinks away. Afterwards you will see why balancing matters."}
+]
+}

@@ -22,14 +22,22 @@ private:
     BSTNode* findMaxHelper(BSTNode* node);
     BSTNode* kthSmallestHelper(BSTNode* node, int k, int& count);
 
-    bool removeHelper(TreeNode*& node, int key, EventLog* log);
+    bool removeHelper(TreeNode*& node, int key, EventLog* log, int parentId, int side);
 
     void rangeQueryHelper(BSTNode* node, int lo, int hi, List*& tail, EventLog* log);
 
 public:
+    long long compareCount;
+
     BST();
 
-    bool insert(int key, EventLog* log = nullptr);
+    void resetStats() { compareCount = 0; }
+
+    void reset();   // delete the tree and restart node ids at 1 
+
+    void adopt(TreeNode* r, int nextId);
+
+    virtual bool insert(int key, EventLog* log = nullptr);
 
     BSTNode* search(int key, EventLog* log = nullptr);
 
@@ -39,7 +47,7 @@ public:
     BSTNode* successor(int key);
     BSTNode* predecessor(int key);
 
-    bool remove(int key, EventLog* log = nullptr);
+    virtual bool remove(int key, EventLog* log = nullptr);
 
     List* rangeQuery(int lo, int hi, EventLog* log = nullptr);
 
