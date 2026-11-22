@@ -7,9 +7,6 @@
 #include "ActTestMenu.h"
 #include "Progress.h"
 #include "SaveManager.h"
-
-// Linker workaround: compile these two screen implementations in this translation unit.
-// Their separate .cpp entries are removed from the project file below to prevent duplicate definitions.
 #include "Act2Screen.cpp"
 #include "Act3Screen.cpp"
 
