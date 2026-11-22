@@ -63,7 +63,13 @@ void Game::startAct2()
     act3 = nullptr;
     act4 = nullptr;
 
-    act2 = new Act2Screen(font, progress);
+    unsigned int actSeed = SeededRandom::deriveSeed(
+        campaignSeed,
+        3,
+        0
+    );
+
+    act2 = new Act2Screen(font, progress, static_cast<int>(actSeed));
     activeScreen = act2;
 
     state = PLAYING;

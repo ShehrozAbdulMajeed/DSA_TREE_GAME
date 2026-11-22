@@ -51,7 +51,7 @@ public:
 	Act2Level();
 
 	void begin(const LevelDef& d, EventLog* log = nullptr);
-	
+
 	// navigation levels (search / insert / boss): dir 1 = left, 2 = right 
 	bool move(int dir, EventLog* log);
 	bool clickNode(int id, EventLog* log);

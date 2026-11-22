@@ -43,7 +43,8 @@ private:
 	void drawCutscene(sf::RenderWindow& w);
 	void drawResult(sf::RenderWindow& w);
 public:
-	Act2Screen(const sf::Font& font, Progress& progress);
+	 float WIN_W = 1280.0f, WIN_H = 720.0f;
+	Act2Screen(const sf::Font& font, Progress& progress, int gameSeed);
 	void handleEvent(const sf::Event& e) override;
 	void update(float dt) override;
 	void draw(sf::RenderWindow& w) override;

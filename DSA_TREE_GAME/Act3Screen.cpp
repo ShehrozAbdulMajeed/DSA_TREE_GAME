@@ -4,8 +4,7 @@
 #include <cstring>
 
 
-static const float ACT3_WIN_W = 1280.0f, ACT3_WIN_H = 720.0f;
-static const char* LEADERBOARD_PATH = "leaderboard.txt";
+
 
 Act3Screen::Act3Screen(const sf::Font& font, Progress& progress, int gameSeed)
 	: prog(progress), view(font), text(font, "", 16) {
