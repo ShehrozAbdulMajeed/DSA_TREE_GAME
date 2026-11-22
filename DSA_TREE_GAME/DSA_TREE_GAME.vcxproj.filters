@@ -45,9 +45,6 @@
     <ClCompile Include="TreeMirror.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Act2Screen.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Act2Level.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -66,9 +63,6 @@
     <ClCompile Include="Act3Level.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Act3Screen.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ActTestMenu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -78,7 +72,9 @@
     <ClCompile Include="NavigationScreen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
+  
+    <ClCompile Include="StringUtil.cpp"><Filter>Source Files</Filter></ClCompile>
+</ItemGroup>
   <ItemGroup>
     <ClInclude Include="Events.h">
       <Filter>Header Files</Filter>
@@ -110,10 +106,7 @@
     <ClInclude Include="Screen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TextUtil.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Act2Screen.h">
+<ClInclude Include="Act2Screen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Act2Level.h">
@@ -149,11 +142,13 @@
     <ClInclude Include="NavigationScreen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
+  
+    <ClInclude Include="StringUtil.h"><Filter>Header Files</Filter></ClInclude>
+</ItemGroup>
   <ItemGroup>
     <Text Include="Conventions.txt" />
     <Text Include="LevelGuide.txt">
       <Filter>Source Files</Filter>
     </Text>
-  </ItemGroup>
+</ItemGroup>
 </Project>

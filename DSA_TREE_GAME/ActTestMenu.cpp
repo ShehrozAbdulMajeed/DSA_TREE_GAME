@@ -1,5 +1,6 @@
 #include "ActTestMenu.h"
 
+
 ActTestMenu::ActTestMenu(const sf::Font& f, Act2Screen& a2, Act3Screen& a3)
     : font(f), act2(a2), act3(a3), active(nullptr), title(f, "ACT TEST MENU", 34) {
 }
@@ -18,15 +19,15 @@ void ActTestMenu::handleEvent(const sf::Event& e) {
         active->handleEvent(e);
         if (active == &act2 && act2.exitRequested()) { act2.clearExit();active = nullptr; }
         if (active == &act3 && act3.exitRequested()) { act3.clearExit();active = nullptr; }
-        if (const auto* k = e.getIf<sf::Event::KeyPressed>())
+        if (const sf::Event::KeyPressed* k = e.getIf<sf::Event::KeyPressed>())
             if (k->code == sf::Keyboard::Key::Escape && active == nullptr) return;
         return;
     }
-    if (const auto* k = e.getIf<sf::Event::KeyPressed>()) {
+    if (const sf::Event::KeyPressed* k = e.getIf<sf::Event::KeyPressed>()) {
         if (k->code == sf::Keyboard::Key::Num1) active = &act2;
         else if (k->code == sf::Keyboard::Key::Num2) active = &act3;
     }
-    if (const auto* m = e.getIf<sf::Event::MouseButtonPressed>()) {
+    if (const sf::Event::MouseButtonPressed* m = e.getIf<sf::Event::MouseButtonPressed>()) {
         if (m->button == sf::Mouse::Button::Left) {
             float x = (float)m->position.x * (2.0f / 3.0f);
             float y = (float)m->position.y * (2.0f / 3.0f);

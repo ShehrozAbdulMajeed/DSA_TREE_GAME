@@ -1,5 +1,7 @@
 #include "Act3Level.h"
-#include "TextUtil.h"
+#include "StringUtil.h"
+#include <cstring>
+
 
 static const int MAX_BALANCE = 3;        // endless: any room with balance >= 3 = collapse
 
@@ -89,7 +91,7 @@ void Act3Level::buildBalanced(AVL& t, int n) {
 void Act3Level::settle() {
 	if (state == PLAYING && def.type != LevelType::ENDLESS && alarm >= capacity) {
 		state = LOST;
-		tCopy(message, 128, "The alarm is full - the guards are coming!");
+		copyText(message, 128, "The alarm is full - the guards are coming!");
 	}
 }
 
@@ -150,7 +152,7 @@ void Act3Level::setupViolationRound() {
 	if (z) { caseId = classify(tree, z); movesFor(z, caseId); }
 	identified = (def.type == LevelType::SINGLE);
 	pendingReload = true;
-	tCopy(message, 128, def.type == LevelType::DOUBLE ? "Identify the case, then rotate." : "Select the lowest unbalanced room and rotate it.");
+	copyText(message, 128, def.type == LevelType::DOUBLE ? "Identify the case, then rotate." : "Select the lowest unbalanced room and rotate it.");
 }
 
 void Act3Level::pickPredictKey() {
@@ -173,9 +175,9 @@ void Act3Level::pickPredictKey() {
 		if (outcome == want) { pick = k; pickOutcome = outcome; break; }
 	}
 	pendingKey = pick; expected = pickOutcome;
-	tCopy(message, 128, "Predict what the vault will do when key ");
-	tAppendInt(message, 128, pendingKey);
-	tAppend(message, 128, " is inserted.");
+	copyText(message, 128, "Predict what the vault will do when key ");
+	appendInt(message, 128, pendingKey);
+	appendText(message, 128, " is inserted.");
 }
 
 void Act3Level::beginImpl(const LevelDef& d, EventLog* log, bool sim) {
@@ -195,7 +197,7 @@ void Act3Level::beginImpl(const LevelDef& d, EventLog* log, bool sim) {
 	case LevelType::BADGES:
 		buildBadges();
 		unbalancedTotal = unbalancedCount();
-		tCopy(message, 128, "Click every unbalanced (red) room.");
+		copyText(message, 128, "Click every unbalanced (red) room.");
 		break;
 	case LevelType::SINGLE:
 	case LevelType::DOUBLE:
@@ -211,13 +213,13 @@ void Act3Level::beginImpl(const LevelDef& d, EventLog* log, bool sim) {
 		phase = PH_DELIVERY;
 		int n = def.nodes < 3 ? 3 : (def.nodes > 60 ? 60 : def.nodes);
 		for (int i = 0; i < n; i++) deliverKeys[i] = 10 * (i + 1) + rng.upto(7);
-		tCopy(message, 128, "Sorted deliveries are arriving...");
+		copyText(message, 128, "Sorted deliveries are arriving...");
 		break;
 	}
 	case LevelType::ENDLESS:
 		buildBalanced(tree, def.nodes);
 		tree.balancing = false;
-		tCopy(message, 128, "Operations are streaming in. Rotate to keep the vault standing.");
+		copyText(message, 128, "Operations are streaming in. Rotate to keep the vault standing.");
 		break;
 	default:
 		break;
@@ -255,25 +257,25 @@ bool Act3Level::clickNode(int id, EventLog* log) {
 		if (!cur) return false;
 		if (cur->left && cur->left->id == id) return move(1, log);
 		if (cur->right && cur->right->id == id) return move(2, log);
-		tCopy(message, 128, "You can only move to a room next to you.");
+		copyText(message, 128, "You can only move to a room next to you.");
 		return false;
 	}
 	if (def.type != LevelType::BADGES || id <= 0 || id >= 256) return false;
 	AVLNode* n = findById(tree.getTree(), id);
 	if (!n) return false;
-	if (clicked[id]) { tCopy(message, 128, "Already marked."); return false; }
+	if (clicked[id]) { copyText(message, 128, "Already marked."); return false; }
 	int bf = tree.balanceFactor(n);
 	if (bf > 1 || bf < -1) {
 		clicked[id] = true; found++; alarm++;
 		if (log) { log->add(EventTypes::HIGHLIGHT_SUBTREE, id, 2); log->add(EventTypes::DONE); }
-		tCopy(message, 128, "Unbalanced room found.");
-		if (found >= unbalancedTotal) { state = WON; tCopy(message, 128, "Every unbalanced room found!"); }
+		copyText(message, 128, "Unbalanced room found.");
+		if (found >= unbalancedTotal) { state = WON; copyText(message, 128, "Every unbalanced room found!"); }
 		settle();
 		return true;
 	}
-	tCopy(message, 128, "That room is balanced (+1 alarm): its balance is ");
-	tAppendInt(message, 128, bf);
-	tAppend(message, 128, ".");
+	copyText(message, 128, "That room is balanced (+1 alarm): its balance is ");
+	appendInt(message, 128, bf);
+	appendText(message, 128, ".");
 	penalize(1, 0);
 	return false;
 }
@@ -285,14 +287,14 @@ bool Act3Level::answerCase(int c, EventLog* log) {
 	if (state != PLAYING || def.type != LevelType::DOUBLE || identified) return false;
 	if (c == caseId) {
 		identified = true;
-		tCopy(message, 128, "Correct: ");
-		tAppend(message, 128, caseName(caseId));
-		tAppend(message, 128, ". Now perform the two rotations.");
+		copyText(message, 128, "Correct: ");
+		appendText(message, 128, caseName(caseId));
+		appendText(message, 128, ". Now perform the two rotations.");
 		return true;
 	}
-	tCopy(message, 128, "Not quite (+2 alarm, -50): it is ");
-	tAppend(message, 128, caseName(caseId));
-	tAppend(message, 128, ".");
+	copyText(message, 128, "Not quite (+2 alarm, -50): it is ");
+	appendText(message, 128, caseName(caseId));
+	appendText(message, 128, ".");
 	penalize(2, 50);
 	return false;
 }
@@ -309,9 +311,9 @@ void Act3Level::checkInvalid() {
 	}
 	if (deep) {                 // balance >= 3 means a second hit landed before the first was repaired
 		state = LOST;
-		tCopy(message, 128, "The vault collapsed! You survived ");
-		tAppendInt(message, 128, (int)survived);
-		tAppend(message, 128, " seconds.");
+		copyText(message, 128, "The vault collapsed! You survived ");
+		appendInt(message, 128, (int)survived);
+		appendText(message, 128, " seconds.");
 	}
 }
 
@@ -320,16 +322,16 @@ bool Act3Level::rotate(int id, bool left, EventLog* log) {
 	if (def.type == LevelType::ENDLESS) {
 		bool ok = tree.rotateAt(id, left, log);
 		if (ok && log) log->add(EventTypes::DONE);
-		if (!ok) tCopy(message, 128, "That room cannot rotate that way.");
+		if (!ok) copyText(message, 128, "That room cannot rotate that way.");
 		return ok;          // collapse is only judged when operations arrive
 	}
 	if (def.type != LevelType::SINGLE && def.type != LevelType::DOUBLE) return false;
-	if (!identified) { tCopy(message, 128, "Identify the case first (LL, RR, LR or RL)."); return false; }
+	if (!identified) { copyText(message, 128, "Identify the case first (LL, RR, LR or RL)."); return false; }
 	if (moveStep >= moveCount) return false;
 	if (id != mvId[moveStep] || left != mvLeft[moveStep]) {
-		tCopy(message, 128, "Wrong rotation (+2 alarm, -50 points) - it is a ");
-		tAppend(message, 128, caseName(caseId));
-		tAppend(message, 128, " case.");
+		copyText(message, 128, "Wrong rotation (+2 alarm, -50 points) - it is a ");
+		appendText(message, 128, caseName(caseId));
+		appendText(message, 128, " case.");
 		penalize(2, 50);
 		return false;
 	}
@@ -339,10 +341,10 @@ bool Act3Level::rotate(int id, bool left, EventLog* log) {
 	moveStep++;
 	if (moveStep >= moveCount) {
 		round++;
-		if (round >= def.rounds) { state = WON; tCopy(message, 128, "All repairs done!"); }
+		if (round >= def.rounds) { state = WON; copyText(message, 128, "All repairs done!"); }
 		else { setupViolationRound(); }
 	}
-	else tCopy(message, 128, "Good. Now the second rotation.");
+	else copyText(message, 128, "Good. Now the second rotation.");
 	settle();
 	return true;
 }
@@ -351,13 +353,13 @@ bool Act3Level::rotate(int id, bool left, EventLog* log) {
 
 bool Act3Level::predict(int c, EventLog* log) {
 	if (state != PLAYING || def.type != LevelType::PREDICT) return false;
-	if (c == expected) tCopy(message, 128, "Correct prediction!");
+	if (c == expected) copyText(message, 128, "Correct prediction!");
 	else {
-		tCopy(message, 128, "Not quite (+2 alarm, -50): inserting ");
-		tAppendInt(message, 128, pendingKey);
-		tAppend(message, 128, " causes ");
-		tAppend(message, 128, caseName(expected));
-		tAppend(message, 128, ".");
+		copyText(message, 128, "Not quite (+2 alarm, -50): inserting ");
+		appendInt(message, 128, pendingKey);
+		appendText(message, 128, " causes ");
+		appendText(message, 128, caseName(expected));
+		appendText(message, 128, ".");
 		penalties++; penaltyPoints += 50; alarm += 2;
 	}
 	tree.insert(pendingKey, 0, log);          // the vault repairs itself
@@ -380,7 +382,7 @@ void Act3Level::enterOrder(TreeNode* n, EventLog* log) {
 	if (kRemain == L + 1) {
 		state = WON;
 		if (log) log->add(EventTypes::HIGHLIGHT_SUBTREE, n->id, 2);
-		tCopy(message, 128, "Found the treasure using only subtree sizes!");
+		copyText(message, 128, "Found the treasure using only subtree sizes!");
 	}
 	if (log) log->add(EventTypes::DONE);
 	settle();
@@ -408,9 +410,9 @@ void Act3Level::deliverNext(EventLog* log) {
 		kRemain = needIdx;
 		AVLNode* t = tree.kth(needIdx);
 		targetKey = t ? t->key : 0;
-		tCopy(message, 128, "Steal the treasure that is number ");
-		tAppendInt(message, 128, kWanted);
-		tAppend(message, 128, " by value (largest = 1). Use the subtree sizes.");
+		copyText(message, 128, "Steal the treasure that is number ");
+		appendInt(message, 128, kWanted);
+		appendText(message, 128, " by value (largest = 1). Use the subtree sizes.");
 		nodeCount = n;
 		enterOrder(tree.getTree(), log);
 	}
@@ -434,11 +436,11 @@ bool Act3Level::move(int dir, EventLog* log) {
 	if (want == 0) return false;
 	int L = tree.getSize(static_cast<AVLNode*>(cur->left));
 	if (dir != want) {
-		tCopy(message, 128, "Wrong way (+1 alarm): need number ");
-		tAppendInt(message, 128, kRemain);
-		tAppend(message, 128, " from the smallest here; the left side has ");
-		tAppendInt(message, 128, L);
-		tAppend(message, 128, want == 1 ? " rooms, so go left." : " rooms, so go right.");
+		copyText(message, 128, "Wrong way (+1 alarm): need number ");
+		appendInt(message, 128, kRemain);
+		appendText(message, 128, " from the smallest here; the left side has ");
+		appendInt(message, 128, L);
+		appendText(message, 128, want == 1 ? " rooms, so go left." : " rooms, so go right.");
 		penalize(1, 0);
 		return false;
 	}
@@ -492,31 +494,31 @@ void Act3Level::hint() {
 	case LevelType::BADGES: {
 		int ids[256]; int cnt = unbalancedIds(ids, 256);
 		for (int i = 0; i < cnt; i++) if (!clicked[ids[i]]) { hintId = ids[i]; break; }
-		tCopy(message, 128, "Hint: the highlighted room is unbalanced.");
+		copyText(message, 128, "Hint: the highlighted room is unbalanced.");
 		break;
 	}
 	case LevelType::SINGLE: case LevelType::DOUBLE:
-		if (!identified) { tCopy(message, 128, "Hint: it is a "); tAppend(message, 128, caseName(caseId)); tAppend(message, 128, " case."); }
+		if (!identified) { copyText(message, 128, "Hint: it is a "); appendText(message, 128, caseName(caseId)); appendText(message, 128, " case."); }
 		else if (moveStep < moveCount) {
 			hintId = mvId[moveStep];
-			tCopy(message, 128, mvLeft[moveStep] ? "Hint: rotate the highlighted room LEFT." : "Hint: rotate the highlighted room RIGHT.");
+			copyText(message, 128, mvLeft[moveStep] ? "Hint: rotate the highlighted room LEFT." : "Hint: rotate the highlighted room RIGHT.");
 		}
 		break;
 	case LevelType::PREDICT:
-		tCopy(message, 128, "Hint: expect "); tAppend(message, 128, caseName(expected)); tAppend(message, 128, ".");
+		copyText(message, 128, "Hint: expect "); appendText(message, 128, caseName(expected)); appendText(message, 128, ".");
 		break;
 	case LevelType::ORDER:
 		if (phase == PH_PLAY) {
 			AVLNode* cur = findById(tree.getTree(), curId);
 			int d = orderDir();
 			if (cur && d) { TreeNode* c = (d == 1) ? cur->left : cur->right; hintId = c ? c->id : 0; }
-			tCopy(message, 128, d == 1 ? "Hint: go left." : "Hint: go right.");
+			copyText(message, 128, d == 1 ? "Hint: go left." : "Hint: go right.");
 		}
 		break;
 	case LevelType::ENDLESS: {
 		AVLNode* z = lowestUnbalanced(tree);
-		if (z) { hintId = z->id; tCopy(message, 128, "Hint: repair the highlighted room ("); tAppend(message, 128, caseName(classify(tree, z))); tAppend(message, 128, ")."); }
-		else tCopy(message, 128, "Nothing is unbalanced right now.");
+		if (z) { hintId = z->id; copyText(message, 128, "Hint: repair the highlighted room ("); appendText(message, 128, caseName(classify(tree, z))); appendText(message, 128, ")."); }
+		else copyText(message, 128, "Nothing is unbalanced right now.");
 		break;
 	}
 	default: break;

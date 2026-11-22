@@ -1,9 +1,11 @@
 #include "ActPlaceholderScreen.h"
+
+
 ActPlaceholderScreen::ActPlaceholderScreen(const sf::Font& f, const char* t)
     : font(f), actTitle(t), heading(f, "", 32), body(f, "", 20), back(false) {
 }
 void ActPlaceholderScreen::handleEvent(const sf::Event& e) {
-    if (const auto* k = e.getIf<sf::Event::KeyPressed>()) if (k->code == sf::Keyboard::Key::Escape) back = true;
+    if (const sf::Event::KeyPressed* k = e.getIf<sf::Event::KeyPressed>()) if (k->code == sf::Keyboard::Key::Escape) back = true;
 }
 void ActPlaceholderScreen::draw(sf::RenderWindow& w) {
     w.clear(sf::Color(18, 20, 30));

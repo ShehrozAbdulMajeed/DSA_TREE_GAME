@@ -1,7 +1,9 @@
 #include "Validator.h"
-#include "TextUtil.h"
+#include "StringUtil.h"
+#include <cstring>
 
-static bool fail(char* why, int cap, const char* msg) { tCopy(why, cap, msg); return false; }
+
+static bool fail(char* why, int cap, const char* msg) { copyText(why, cap, msg); return false; }
 
 static bool checkTree(TreeNode* root, bool avlNodes, char* why, int cap) {
 	why[0] = 0;

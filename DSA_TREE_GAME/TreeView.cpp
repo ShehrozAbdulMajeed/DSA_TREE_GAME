@@ -1,5 +1,7 @@
 #include "TreeView.h"
-#include "TextUtil.h"
+#include "StringUtil.h"
+#include <cstring>
+
 
 TreeView::TreeView(const sf::Font& font) : label(font, "", 16) {
     ax = 0; ay = 0; aw = 800; ah = 500;
@@ -16,24 +18,24 @@ void TreeView::drawLabel(sf::RenderTarget& rt, const char* s, unsigned size, flo
 }
 
 void TreeView::handleEvent(const sf::Event& e) {
-    if (const auto* mm = e.getIf<sf::Event::MouseMoved>()) {
+    if (const sf::Event::MouseMoved* mm = e.getIf<sf::Event::MouseMoved>()) {
         float x = (float)mm->position.x * (2.0f / 3.0f);
         float y = (float)mm->position.y * (2.0f / 3.0f);
         hoverX = x; hoverY = y;
         if (dragging) { panX += x - lastMouseX; panY += y - lastMouseY; }
         lastMouseX = x; lastMouseY = y;
     }
-    if (const auto* bp = e.getIf<sf::Event::MouseButtonPressed>()) {
+    if (const sf::Event::MouseButtonPressed* bp = e.getIf<sf::Event::MouseButtonPressed>()) {
         if (bp->button == sf::Mouse::Button::Middle || bp->button == sf::Mouse::Button::Right) {
             dragging = true;
             lastMouseX = (float)bp->position.x * (2.0f / 3.0f);
             lastMouseY = (float)bp->position.y * (2.0f / 3.0f);
         }
     }
-    if (const auto* br = e.getIf<sf::Event::MouseButtonReleased>()) {
+    if (const sf::Event::MouseButtonReleased* br = e.getIf<sf::Event::MouseButtonReleased>()) {
         if (br->button == sf::Mouse::Button::Middle || br->button == sf::Mouse::Button::Right) dragging = false;
     }
-    if (const auto* wheel = e.getIf<sf::Event::MouseWheelScrolled>()) {
+    if (const sf::Event::MouseWheelScrolled* wheel = e.getIf<sf::Event::MouseWheelScrolled>()) {
         float x = (float)wheel->position.x * (2.0f / 3.0f);
         float y = (float)wheel->position.y * (2.0f / 3.0f);
         if (x >= ax && x <= ax + aw && y >= ay && y <= ay + ah) {
@@ -108,7 +110,7 @@ void TreeView::draw(sf::RenderTarget& rt, const TreeMirror& m) {
         node.setOutlineThickness(v->alert ? 4.0f : 2.0f);
         node.setOutlineColor(v->alert ? sf::Color(230, 60, 60) : sf::Color(200, 205, 220)); rt.draw(node);
 
-        if (radius >= 10.0f) { char key[16] = { 0 };tAppendInt(key, 16, v->key);drawLabel(rt, key, radius >= 18 ? 16 : 12, px, py, sf::Color::White); }
+        if (radius >= 10.0f) { char key[16] = { 0 };appendInt(key, 16, v->key);drawLabel(rt, key, radius >= 18 ? 16 : 12, px, py, sf::Color::White); }
         // State is encoded by a letter as well as colour.
         const char* state = "";
         switch (v->mark) {
@@ -132,12 +134,12 @@ void TreeView::draw(sf::RenderTarget& rt, const TreeMirror& m) {
             ring.setPosition({ px,py });ring.setFillColor(sf::Color::Transparent);ring.setOutlineThickness(3.0f);
             ring.setOutlineColor(sf::Color::White);rt.draw(ring);
         }
-        if (showSize && radius >= 10.0f) { char sz[16] = "n=";tAppendInt(sz, 16, v->size);drawLabel(rt, sz, 11, px, py + radius + 12.0f, sf::Color(190, 200, 220)); }
+        if (showSize && radius >= 10.0f) { char sz[16] = "n=";appendInt(sz, 16, v->size);drawLabel(rt, sz, 11, px, py + radius + 12.0f, sf::Color(190, 200, 220)); }
         if (showBalance && radius >= 10.0f) {
             int bf = m.balanceOf(id); float br = radius * 0.5f;
             sf::CircleShape badge(br);badge.setOrigin({ br,br });badge.setPosition({ px + radius * .95f,py - radius * .95f });
             badge.setFillColor(sf::Color(40, 45, 60));badge.setOutlineThickness(1);badge.setOutlineColor(sf::Color::White);rt.draw(badge);
-            char t[8] = { 0 };if (bf > 0)tAppend(t, 8, "+");tAppendInt(t, 8, bf);
+            char t[8] = { 0 };if (bf > 0)appendText(t, 8, "+");appendInt(t, 8, bf);
             drawLabel(rt, t, 10, px + radius * .95f, py - radius * .95f, sf::Color::White);
         }
     }
@@ -145,10 +147,10 @@ void TreeView::draw(sf::RenderTarget& rt, const TreeMirror& m) {
     if (hoverId) {
         const VNode* v = m.node(hoverId);
         if (v) {
-            char a[128] = "Key: "; tAppendInt(a, 128, v->key);
-            tAppend(a, 128, " | Height: ");tAppendInt(a, 128, v->height);
-            tAppend(a, 128, " | Balance: ");tAppendInt(a, 128, m.balanceOf(hoverId));
-            tAppend(a, 128, " | Size: ");tAppendInt(a, 128, v->size);
+            char a[128] = "Key: "; appendInt(a, 128, v->key);
+            appendText(a, 128, " | Height: ");appendInt(a, 128, v->height);
+            appendText(a, 128, " | Balance: ");appendInt(a, 128, m.balanceOf(hoverId));
+            appendText(a, 128, " | Size: ");appendInt(a, 128, v->size);
             sf::RectangleShape bg({ 300.0f,30.0f });bg.setPosition({ ax + 8.0f,ay + ah - 38.0f });
             bg.setFillColor(sf::Color(15, 18, 28, 235));bg.setOutlineThickness(1);bg.setOutlineColor(sf::Color(180, 190, 210));rt.draw(bg);
             label.setCharacterSize(13);label.setString(a);label.setFillColor(sf::Color::White);

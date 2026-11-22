@@ -1,15 +1,27 @@
 #include "Act2Screen.h"
 #include "LevelFile.h"
-#include "TextUtil.h"
+#include "StringUtil.h"
+#include <cstring>
+
 
 static const float WIN_W = 1280.0f, WIN_H = 720.0f;
 
-Act2Screen::Act2Screen(const sf::Font& font, Progress& progress)
+Act2Screen::Act2Screen(const sf::Font& font, Progress& progress, int gameSeed)
 	: prog(progress), view(font), text(font, "", 16) {
 	LevelDef all[24];
 	int n = loadLevelDefs(all, 24);
 	defCount = 0;
-	for (int i = 0; i < n && defCount < 16; i++) if (all[i].act == 2) defs[defCount++] = all[i];
+	for (int i = 0; i < n && defCount < 16; i++) {
+		if (all[i].act == 2) {
+			defs[defCount] = all[i];
+			unsigned int mixedSeed = (unsigned int)defs[defCount].seed ^ ((unsigned int)gameSeed * 2654435761u);
+			mixedSeed ^= mixedSeed >> 16;
+			mixedSeed *= 2246822519u;
+			mixedSeed ^= mixedSeed >> 13;
+			defs[defCount].seed = (int)(mixedSeed & 0x7fffffffU);
+			defCount++;
+		}
+	}
 	mode = SELECT; sel = 0; cutPage = 0; mx = my = 0; deliveryTimer = 0; ended = false; exitFlag = false; dirty = false;
 }
 
@@ -27,7 +39,7 @@ void Act2Screen::put(sf::RenderTarget& rt, const char* s, float x, float y, unsi
 
 void Act2Screen::putWrapped(sf::RenderTarget& rt, const char* s, float x, float y, unsigned size, sf::Color c, int maxChars, float lineH) {
 	char line[160];
-	int len = tLen(s), i = 0, row = 0;
+	int len = (int)std::strlen(s), i = 0, row = 0;
 	while (i < len) {
 		int end = i + maxChars;
 		if (end >= len) end = len;
@@ -105,16 +117,16 @@ void Act2Screen::act(bool ok) { if (ok) afterAction(); }
 
 void Act2Screen::handleEvent(const sf::Event& e) {
 	view.handleEvent(e);
-	if (const auto* mm = e.getIf<sf::Event::MouseMoved>()) {
-		if (const auto* mm = e.getIf<sf::Event::MouseMoved>()) {
+	if (const sf::Event::MouseMoved* mm = e.getIf<sf::Event::MouseMoved>()) {
+		if (const sf::Event::MouseMoved* mm = e.getIf<sf::Event::MouseMoved>()) {
 			mx = (float)mm->position.x * (2.0f / 3.0f);
 			my = (float)mm->position.y * (2.0f / 3.0f);
 			return;
 		}
 	}
 
-	const auto* mb = e.getIf<sf::Event::MouseButtonPressed>();
-	const auto* kp = e.getIf<sf::Event::KeyPressed>();
+	const sf::Event::MouseButtonPressed* mb = e.getIf<sf::Event::MouseButtonPressed>();
+	const sf::Event::KeyPressed* kp = e.getIf<sf::Event::KeyPressed>();
 	if (kp && kp->code == sf::Keyboard::Key::Home) view.resetView();
 	if (mb) {
 		mx = (float)mb->position.x * (2.0f / 3.0f);
@@ -220,19 +232,19 @@ void Act2Screen::drawSelect(sf::RenderWindow& w) {
 	put(w, "ACT 2 - THE SORTED WING (Binary Search Tree)", 140.0f, 40.0f, 30, sf::Color(255, 215, 90));
 	put(w, "Click a level or press 1-5.   Esc: back.   F1: sandbox", 140.0f, 90.0f, 16, sf::Color(140, 150, 175));
 	for (int i = 0; i < defCount; i++) {
-		char s[96]; tCopy(s, 96, defs[i].id); tAppend(s, 96, "   "); tAppend(s, 96, defs[i].title);
+		char s[96]; copyText(s, 96, defs[i].id); appendText(s, 96, "   "); appendText(s, 96, defs[i].title);
 		bool ok = unlocked(i);
 		button(w, s, 140.0f, 140.0f + 84.0f * (float)i, 700.0f, 68.0f, ok);
 		char st[24];
-		if (!ok) tCopy(st, 24, "LOCKED");
-		else { tCopy(st, 24, "Stars: "); tAppendInt(st, 24, prog.stars[2][i]); tAppend(st, 24, "/3"); }
+		if (!ok) copyText(st, 24, "LOCKED");
+		else { copyText(st, 24, "Stars: "); appendInt(st, 24, prog.stars[2][i]); appendText(st, 24, "/3"); }
 		put(w, st, 700.0f, 140.0f + 84.0f * (float)i + 22.0f, 18, ok ? sf::Color(255, 215, 90) : sf::Color(110, 115, 135));
 	}
 }
 
 void Act2Screen::drawBrief(sf::RenderWindow& w) {
 	const LevelDef& d = defs[sel];
-	char t[80]; tCopy(t, 80, "Level "); tAppend(t, 80, d.id); tAppend(t, 80, " - "); tAppend(t, 80, d.title);
+	char t[80]; copyText(t, 80, "Level "); appendText(t, 80, d.id); appendText(t, 80, " - "); appendText(t, 80, d.title);
 	put(w, t, 140.0f, 60.0f, 30, sf::Color(255, 215, 90));
 	putWrapped(w, d.brief, 140.0f, 140.0f, 22, sf::Color(225, 230, 245), 70, 32.0f);
 	put(w, "Rules: entering a room or comparing costs 1 alarm. Alarm capacity = ceil(1.5 x optimal) + 2.", 140.0f, 430.0f, 16, sf::Color(150, 160, 185));
@@ -242,18 +254,18 @@ void Act2Screen::drawBrief(sf::RenderWindow& w) {
 }
 
 void Act2Screen::drawHud(sf::RenderWindow& w) {
-	char t[96]; tCopy(t, 96, "Level "); tAppend(t, 96, level.def.id); tAppend(t, 96, " - "); tAppend(t, 96, level.def.title);
+	char t[96]; copyText(t, 96, "Level "); appendText(t, 96, level.def.id); appendText(t, 96, " - "); appendText(t, 96, level.def.title);
 	put(w, t, 14.0f, 8.0f, 22, sf::Color(255, 215, 90));
 
 	char o[120]; o[0] = 0;
 	switch (level.def.type) {
-	case LevelType::SEARCH: tCopy(o, 120, "Reach the room with key "); tAppendInt(o, 120, level.targetKey); break;
-	case LevelType::INSERT: tCopy(o, 120, "Stash key "); tAppendInt(o, 120, level.targetKey); tAppend(o, 120, " where it belongs"); break;
-	case LevelType::REMOVE: tCopy(o, 120, "Delete key "); tAppendInt(o, 120, level.targetKey); tAppend(o, 120, " - round "); tAppendInt(o, 120, level.round + 1 > level.def.rounds ? level.def.rounds : level.round + 1); tAppend(o, 120, "/"); tAppendInt(o, 120, level.def.rounds); break;
-	case LevelType::RANGE: tCopy(o, 120, "Collect all keys in ["); tAppendInt(o, 120, level.lo); tAppend(o, 120, ", "); tAppendInt(o, 120, level.hi); tAppend(o, 120, "]   collected "); tAppendInt(o, 120, level.collected); tAppend(o, 120, "/"); tAppendInt(o, 120, level.inRangeTotal); break;
+	case LevelType::SEARCH: copyText(o, 120, "Reach the room with key "); appendInt(o, 120, level.targetKey); break;
+	case LevelType::INSERT: copyText(o, 120, "Stash key "); appendInt(o, 120, level.targetKey); appendText(o, 120, " where it belongs"); break;
+	case LevelType::REMOVE: copyText(o, 120, "Delete key "); appendInt(o, 120, level.targetKey); appendText(o, 120, " - round "); appendInt(o, 120, level.round + 1 > level.def.rounds ? level.def.rounds : level.round + 1); appendText(o, 120, "/"); appendInt(o, 120, level.def.rounds); break;
+	case LevelType::RANGE: copyText(o, 120, "Collect all keys in ["); appendInt(o, 120, level.lo); appendText(o, 120, ", "); appendInt(o, 120, level.hi); appendText(o, 120, "]   collected "); appendInt(o, 120, level.collected); appendText(o, 120, "/"); appendInt(o, 120, level.inRangeTotal); break;
 	case LevelType::BOSS:
-		if (level.phase == Act2Level::PH_DELIVERY) { tCopy(o, 120, "Sorted deliveries arriving... "); tAppendInt(o, 120, level.delivered); tAppend(o, 120, "/"); tAppendInt(o, 120, level.def.nodes); }
-		else { tCopy(o, 120, "Find key "); tAppendInt(o, 120, level.targetKey); tAppend(o, 120, " before the alarm capacity shrinks!"); }
+		if (level.phase == Act2Level::PH_DELIVERY) { copyText(o, 120, "Sorted deliveries arriving... "); appendInt(o, 120, level.delivered); appendText(o, 120, "/"); appendInt(o, 120, level.def.nodes); }
+		else { copyText(o, 120, "Find key "); appendInt(o, 120, level.targetKey); appendText(o, 120, " before the alarm capacity shrinks!"); }
 		break;
 	}
 	put(w, o, 14.0f, 38.0f, 20, sf::Color(235, 240, 255));
@@ -267,8 +279,8 @@ void Act2Screen::drawHud(sf::RenderWindow& w) {
 	sf::RectangleShape fill({ 360.0f * frac, 22.0f }); fill.setPosition({ 14.0f, 72.0f });
 	fill.setFillColor(frac < 0.6f ? sf::Color(50, 170, 90) : (frac < 0.85f ? sf::Color(220, 180, 40) : sf::Color(220, 60, 60)));
 	w.draw(fill);
-	char a[96]; tCopy(a, 96, "ALARM "); tAppendInt(a, 96, level.alarm); tAppend(a, 96, " / "); tAppendInt(a, 96, level.capacity);
-	tAppend(a, 96, "   par "); tAppendInt(a, 96, level.optimal); tAppend(a, 96, "   penalties "); tAppendInt(a, 96, level.penalties);
+	char a[96]; copyText(a, 96, "ALARM "); appendInt(a, 96, level.alarm); appendText(a, 96, " / "); appendInt(a, 96, level.capacity);
+	appendText(a, 96, "   par "); appendInt(a, 96, level.optimal); appendText(a, 96, "   penalties "); appendInt(a, 96, level.penalties);
 	put(w, a, 390.0f, 72.0f, 18, sf::Color(220, 225, 240));
 	put(w, level.message, 14.0f, 102.0f, 18, sf::Color(150, 200, 255));
 }
@@ -305,16 +317,16 @@ void Act2Screen::drawCutscene(sf::RenderWindow& w) {
 	int hBst = level.tree.height(level.tree.getTree());
 	int hAvl = cutAvl.height(cutAvl.getTree());
 	char t[220];
-	if (cutPage == 0) { tCopy(t, 220, "The Lazy Architect built the vault in the order the keys arrived. They arrived sorted, so every new room went to the right of the last one."); }
+	if (cutPage == 0) { copyText(t, 220, "The Lazy Architect built the vault in the order the keys arrived. They arrived sorted, so every new room went to the right of the last one."); }
 	else if (cutPage == 1) {
-		tCopy(t, 220, "The vault is a corridor: height "); tAppendInt(t, 220, hBst);
-		tAppend(t, 220, " for "); tAppendInt(t, 220, n); tAppend(t, 220, " rooms. Finding the last treasure costs "); tAppendInt(t, 220, n);
-		tAppend(t, 220, " steps - the alarm meter fills like a linear search.");
+		copyText(t, 220, "The vault is a corridor: height "); appendInt(t, 220, hBst);
+		appendText(t, 220, " for "); appendInt(t, 220, n); appendText(t, 220, " rooms. Finding the last treasure costs "); appendInt(t, 220, n);
+		appendText(t, 220, " steps - the alarm meter fills like a linear search.");
 	}
 	else {
-		tCopy(t, 220, "The same keys in a balanced (AVL) tree have height "); tAppendInt(t, 220, hAvl);
-		tAppend(t, 220, ", so any search costs at most "); tAppendInt(t, 220, hAvl);
-		tAppend(t, 220, " steps. Balancing keeps height near log2(n). That is Act 3.");
+		copyText(t, 220, "The same keys in a balanced (AVL) tree have height "); appendInt(t, 220, hAvl);
+		appendText(t, 220, ", so any search costs at most "); appendInt(t, 220, hAvl);
+		appendText(t, 220, " steps. Balancing keeps height near log2(n). That is Act 3.");
 	}
 	put(w, "CUTSCENE: why balancing is needed", 40.0f, 24.0f, 26, sf::Color(255, 215, 90));
 	putWrapped(w, t, 40.0f, 70.0f, 20, sf::Color(230, 235, 250), 100, 28.0f);
@@ -335,15 +347,15 @@ void Act2Screen::drawResult(sf::RenderWindow& w) {
 		c.setOutlineThickness(2.0f); c.setOutlineColor(sf::Color(200, 205, 220));
 		w.draw(c);
 	}
-	char st[24]; tCopy(st, 24, "Stars: "); tAppendInt(st, 24, s); tAppend(st, 24, "/3");
+	char st[24]; copyText(st, 24, "Stars: "); appendInt(st, 24, s); appendText(st, 24, "/3");
 	put(w, st, 400.0f, 132.0f, 24, sf::Color::White);
 	char l[96];
-	tCopy(l, 96, "Steps (alarm): "); tAppendInt(l, 96, level.alarm); tAppend(l, 96, "     Optimal: "); tAppendInt(l, 96, level.optimal);
+	copyText(l, 96, "Steps (alarm): "); appendInt(l, 96, level.alarm); appendText(l, 96, "     Optimal: "); appendInt(l, 96, level.optimal);
 	put(w, l, 140.0f, 220.0f, 22, sf::Color(225, 230, 245));
-	tCopy(l, 96, "Penalties: "); tAppendInt(l, 96, level.penalties); tAppend(l, 96, level.hintUsed ? "     Hint used (stars capped at 2)" : "");
+	copyText(l, 96, "Penalties: "); appendInt(l, 96, level.penalties); appendText(l, 96, level.hintUsed ? "     Hint used (stars capped at 2)" : "");
 	put(w, l, 140.0f, 256.0f, 22, sf::Color(225, 230, 245));
-	tCopy(l, 96, "Score: "); tAppendInt(l, 96, level.score());
-	if (level.bonus > 0) { tAppend(l, 96, "     (pruning bonus +"); tAppendInt(l, 96, level.bonus); tAppend(l, 96, ")"); }
+	copyText(l, 96, "Score: "); appendInt(l, 96, level.score());
+	if (level.bonus > 0) { appendText(l, 96, "     (pruning bonus +"); appendInt(l, 96, level.bonus); appendText(l, 96, ")"); }
 	put(w, l, 140.0f, 292.0f, 22, sf::Color(255, 215, 90));
 	put(w, level.message, 140.0f, 340.0f, 18, sf::Color(150, 200, 255));
 	button(w, "Retry (R)", 140.0f, 560.0f, 220.0f, 60.0f, true);

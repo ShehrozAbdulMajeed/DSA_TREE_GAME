@@ -12,7 +12,7 @@ void NavigationScreen::drawButton(sf::RenderTarget& w, const char* label, float 
     r.setOutlineColor(sf::Color(190, 165, 95));
     w.draw(r);
     sf::Text t(font, label, 23);
-    auto b = t.getLocalBounds();
+    sf::FloatRect b = t.getLocalBounds();
     t.setOrigin({ b.position.x + b.size.x / 2.f, b.position.y + b.size.y / 2.f });
     t.setPosition({ 640.f, y + 29.f });
     t.setFillColor(sf::Color(245, 235, 210));
@@ -20,7 +20,7 @@ void NavigationScreen::drawButton(sf::RenderTarget& w, const char* label, float 
 }
 
 void NavigationScreen::handleEvent(const sf::Event& e) {
-    if (const auto* k = e.getIf<sf::Event::KeyPressed>()) {
+    if (const sf::Event::KeyPressed* k = e.getIf<sf::Event::KeyPressed>()) {
         if (k->code == sf::Keyboard::Key::Escape && campaign) { campaign = false; return; }
         if (!campaign) {
             if (k->code == sf::Keyboard::Key::Enter || k->code == sf::Keyboard::Key::C) choice = CAMPAIGN;
@@ -34,7 +34,7 @@ void NavigationScreen::handleEvent(const sf::Event& e) {
             if (k->code == sf::Keyboard::Key::Num4) choice = ACT4;
         }
     }
-    if (const auto* m = e.getIf<sf::Event::MouseButtonPressed>()) {
+    if (const sf::Event::MouseButtonPressed* m = e.getIf<sf::Event::MouseButtonPressed>()) {
         if (m->button != sf::Mouse::Button::Left) return;
         float x = (float)m->position.x, y = (float)m->position.y;
         if (x < 425.f || x > 855.f) return;
@@ -52,7 +52,7 @@ void NavigationScreen::draw(sf::RenderWindow& w) {
     w.clear(sf::Color(16, 20, 31));
     title.setString(campaign ? "CAMPAIGN MAP" : "VAULT HEIST: THE LIVING VAULT");
     title.setFillColor(sf::Color(255, 215, 110));
-    auto b = title.getLocalBounds();
+    sf::FloatRect b = title.getLocalBounds();
     title.setOrigin({ b.position.x + b.size.x / 2.f, b.position.y + b.size.y / 2.f });
     title.setPosition({ 640.f, 125.f });
     w.draw(title);

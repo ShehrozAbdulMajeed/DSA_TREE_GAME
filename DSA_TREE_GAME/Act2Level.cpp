@@ -1,5 +1,7 @@
 #include "Act2Level.h"
-#include "TextUtil.h"
+#include "StringUtil.h"
+#include <cstring>
+
 
 Act2Level::Act2Level() : rng(1) {
 	state = PLAYING; phase = PH_PLAY; alarm = 0; capacity = 1000000; optimal = 0;
@@ -77,7 +79,7 @@ int Act2Level::randomAbsentKey() {
 void Act2Level::settle() {
 	if (state == PLAYING && alarm >= capacity) {
 		state = LOST;
-		tCopy(message, 128, "The alarm is full - the guards are coming!");
+		copyText(message, 128, "The alarm is full - the guards are coming!");
 	}
 }
 
@@ -178,7 +180,7 @@ void Act2Level::enterNav(TreeNode* n, EventLog* log) {
 	if ((def.type == LevelType::SEARCH || def.type == LevelType::BOSS) && n->val == targetKey) {
 		state = WON;
 		if (log) log->add(EventTypes::HIGHLIGHT_SUBTREE, n->id, 2);
-		tCopy(message, 128, "Target reached!");
+		copyText(message, 128, "Target reached!");
 	}
 	if (log) log->add(EventTypes::DONE);
 	settle();
@@ -192,11 +194,11 @@ bool Act2Level::move(int dir, EventLog* log) {
 	int want = correctDir();
 	if (want == 0) return false;
 	if (dir != want) {
-		tCopy(message, 128, "Wrong way (+1 alarm): ");
-		tAppendInt(message, 128, targetKey);
-		tAppend(message, 128, want == 1 ? " is smaller than " : " is larger than ");
-		tAppendInt(message, 128, n->val);
-		tAppend(message, 128, want == 1 ? ", so go left." : ", so go right.");
+		copyText(message, 128, "Wrong way (+1 alarm): ");
+		appendInt(message, 128, targetKey);
+		appendText(message, 128, want == 1 ? " is smaller than " : " is larger than ");
+		appendInt(message, 128, n->val);
+		appendText(message, 128, want == 1 ? ", so go left." : ", so go right.");
 		penalize(0);
 		return false;
 	}
@@ -209,9 +211,9 @@ bool Act2Level::move(int dir, EventLog* log) {
 		copyEvents(tmp, log, true);
 		if (log) log->add(EventTypes::DONE);
 		state = WON;
-		tCopy(message, 128, "Stashed key ");
-		tAppendInt(message, 128, targetKey);
-		tAppend(message, 128, " at the right spot!");
+		copyText(message, 128, "Stashed key ");
+		appendInt(message, 128, targetKey);
+		appendText(message, 128, " at the right spot!");
 		return true;
 	}
 	enterNav(child, log);
@@ -226,7 +228,7 @@ bool Act2Level::clickNode(int id, EventLog* log) {
 	if (!n) return false;
 	if (n->left && n->left->id == id) return move(1, log);
 	if (n->right && n->right->id == id) return move(2, log);
-	tCopy(message, 128, "You can only move to a room next to you.");
+	copyText(message, 128, "You can only move to a room next to you.");
 	return false;
 }
 
@@ -250,9 +252,9 @@ void Act2Level::pickRemoveTarget() {
 	else { state = WON; return; }
 	BSTNode* b = tree.search(key);
 	targetId = b->id; targetKey = key;
-	tCopy(message, 128, "Which case applies to key ");
-	tAppendInt(message, 128, key);
-	tAppend(message, 128, "?");
+	copyText(message, 128, "Which case applies to key ");
+	appendInt(message, 128, key);
+	appendText(message, 128, "?");
 }
 
 bool Act2Level::answerCase(int c, EventLog* log) {
@@ -261,9 +263,9 @@ bool Act2Level::answerCase(int c, EventLog* log) {
 	if (!b) return false;
 	int right = caseOf(b);
 	if (c != right) {
-		tCopy(message, 128, "Not quite (+1 alarm): key ");
-		tAppendInt(message, 128, targetKey);
-		tAppend(message, 128, right == 0 ? " is a leaf." : (right == 1 ? " has exactly one child." : " has two children."));
+		copyText(message, 128, "Not quite (+1 alarm): key ");
+		appendInt(message, 128, targetKey);
+		appendText(message, 128, right == 0 ? " is a leaf." : (right == 1 ? " has exactly one child." : " has two children."));
 		penalize(25);
 		return false;
 	}
@@ -274,9 +276,9 @@ bool Act2Level::answerCase(int c, EventLog* log) {
 	copyEvents(tmp, log, false);
 	if (log) log->add(EventTypes::DONE);
 	alarm += compares;
-	tCopy(message, 128, "Key ");
-	tAppendInt(message, 128, targetKey);
-	tAppend(message, 128, " removed.");
+	copyText(message, 128, "Key ");
+	appendInt(message, 128, targetKey);
+	appendText(message, 128, " removed.");
 	round++;
 	if (round >= def.rounds) state = WON;
 	else pickRemoveTarget();
@@ -320,7 +322,7 @@ void Act2Level::enterRange(TreeNode* t, EventLog* log) {
 		state = WON;
 		int b = 10 * (nodeCount - alarm);
 		bonus = b > 0 ? b : 0;
-		tCopy(message, 128, "Range cleared!");
+		copyText(message, 128, "Range cleared!");
 	}
 	if (log) log->add(EventTypes::DONE);
 	settle();
@@ -330,11 +332,11 @@ bool Act2Level::rangeClick(int id, EventLog* log) {
 	if (state != PLAYING || def.type != LevelType::RANGE || id <= 0 || id >= 256) return false;
 	BSTNode* n = findById(tree.getTree(), id);
 	if (!n) return false;
-	if (entered[id]) { tCopy(message, 128, "You are already in that room."); return false; }
+	if (entered[id]) { copyText(message, 128, "You are already in that room."); return false; }
 	BSTNode* p = parentOf(id);
-	if (!p || !entered[p->id]) { tCopy(message, 128, "Enter its parent room first."); return false; }
+	if (!p || !entered[p->id]) { copyText(message, 128, "Enter its parent room first."); return false; }
 	if (pruned[id]) {
-		tCopy(message, 128, "Pruned room (+1 alarm): its keys can never be in the range.");
+		copyText(message, 128, "Pruned room (+1 alarm): its keys can never be in the range.");
 		penalize(0);
 		return false;
 	}
@@ -354,7 +356,7 @@ void Act2Level::deliverNext(EventLog* log) {
 	if (log) log->add(EventTypes::DONE);
 	if (delivered >= def.nodes) {
 		phase = PH_PLAY;
-		tCopy(message, 128, "All deliveries are in. Find the last treasure!");
+		copyText(message, 128, "All deliveries are in. Find the last treasure!");
 		EventLog* none = nullptr;
 		(void)none;
 		enterNav(tree.getTree(), log);
@@ -391,14 +393,14 @@ void Act2Level::hint() {
 	if (def.type == LevelType::REMOVE) {
 		BSTNode* b = tree.search(targetKey);
 		if (b) {
-			tCopy(message, 128, "Hint: key ");
-			tAppendInt(message, 128, targetKey);
-			tAppend(message, 128, caseOf(b) == 0 ? " has no children." : (caseOf(b) == 1 ? " has one child." : " has two children."));
+			copyText(message, 128, "Hint: key ");
+			appendInt(message, 128, targetKey);
+			appendText(message, 128, caseOf(b) == 0 ? " has no children." : (caseOf(b) == 1 ? " has one child." : " has two children."));
 		}
 	}
 	else if (def.type == LevelType::RANGE) {
 		hintId = needed(tree.getTree());
-		tCopy(message, 128, "Hint: enter the highlighted room.");
+		copyText(message, 128, "Hint: enter the highlighted room.");
 	}
 	else if (phase == PH_PLAY) {
 		int d = correctDir();
@@ -406,8 +408,8 @@ void Act2Level::hint() {
 		if (n && d) {
 			TreeNode* c = (d == 1) ? n->left : n->right;
 			hintId = c ? c->id : 0;
-			tCopy(message, 128, d == 1 ? "Hint: go left." : "Hint: go right.");
-			if (!c) tAppend(message, 128, " The new room goes into the empty spot.");
+			copyText(message, 128, d == 1 ? "Hint: go left." : "Hint: go right.");
+			if (!c) appendText(message, 128, " The new room goes into the empty spot.");
 		}
 	}
 }

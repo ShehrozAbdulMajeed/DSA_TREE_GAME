@@ -1,8 +1,9 @@
 #include "SaveManager.h"
 #include "Validator.h"
-#include "TextUtil.h"
+#include "StringUtil.h"
 #include <fstream>
 #include <cstring>
+
 
 // helpers 
 
@@ -88,7 +89,7 @@ int SaveManager::saveGame(const char* path, const Progress& p, int seed,
 	const BST* tree, int treeKind, const MaxHeap* heap, char* err, int errCap) {
 	if (err) err[0] = 0;
 	std::ofstream out(path);
-	if (!out) { if (err) tCopy(err, errCap, "Could not open the save file for writing."); return SaveResult::WRITE_ERROR; }
+	if (!out) { if (err) copyText(err, errCap, "Could not open the save file for writing."); return SaveResult::WRITE_ERROR; }
 
 	out << "VAULT_SAVE 1\n";
 	for (int a = 1; a <= 4; a++) {
@@ -110,7 +111,7 @@ int SaveManager::saveGame(const char* path, const Progress& p, int seed,
 	}
 	out << "END\n";
 	out.flush();
-	if (!out) { if (err) tCopy(err, errCap, "Write failed (disk full or read-only?)."); return SaveResult::WRITE_ERROR; }
+	if (!out) { if (err) copyText(err, errCap, "Write failed (disk full or read-only?)."); return SaveResult::WRITE_ERROR; }
 	return SaveResult::OK;
 }
 
@@ -194,7 +195,7 @@ int SaveManager::loadGame(const char* path, Progress& p, int& seed,
 	}
 
 	if (problem) {
-		if (err) tCopy(err, errCap, problem);
+		if (err) copyText(err, errCap, problem);
 		freeTree(root);
 		delete[] heapData;
 		return SaveResult::INVALID;                      // caller's objects are untouched
@@ -236,7 +237,7 @@ bool Leaderboard::submit(const char* path, const char* name, int score) {
 	LeaderEntry e;
 	int len = 0;
 	for (int i = 0; name && name[i] && len < 15; i++) e.name[len++] = (name[i] == ' ') ? '_' : name[i];   // no spaces in the file
-	if (len == 0) { tCopy(e.name, 16, "ANON"); len = 4; }
+	if (len == 0) { copyText(e.name, 16, "ANON"); len = 4; }
 	e.name[len] = 0;
 	e.score = score;
 

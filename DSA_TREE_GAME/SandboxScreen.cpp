@@ -1,11 +1,13 @@
 #include "SandboxScreen.h"
-#include "TextUtil.h"
+#include "StringUtil.h"
 #include "SaveManager.h"
+#include <cstring>
+
 
 SandboxScreen::SandboxScreen(const sf::Font& font) : view(font), text(font, "", 16) {
 	useAVL = false; cur = &bst;
 	inputLen = 0; input[0] = 0; op = 0; rngState = 2026; wasPlaying = false;
-	tCopy(status, 96, "Type a number, press Enter.");
+	copyText(status, 96, "Type a number, press Enter.");
 	view.setShowBalance(false);
 }
 
@@ -22,7 +24,7 @@ void SandboxScreen::put(sf::RenderTarget& rt, const char* s, float x, float y, u
 
 void SandboxScreen::verifySync() {
 	if (!mirror.matchesModel(cur->getTree()))
-		tCopy(status, 96, "SYNC ERROR: drawn tree differs from model!");   // dev aid
+		copyText(status, 96, "SYNC ERROR: drawn tree differs from model!");   // dev aid
 }
 
 void SandboxScreen::runOp(int key) {
@@ -36,18 +38,18 @@ void SandboxScreen::runOp(int key) {
 	status[0] = 0;
 	if (op == 0) {
 		ok = cur->insert(key, &log);
-		tCopy(status, 96, ok ? "Inserted " : "Duplicate rejected: ");
-		tAppendInt(status, 96, key);
+		copyText(status, 96, ok ? "Inserted " : "Duplicate rejected: ");
+		appendInt(status, 96, key);
 	}
 	else if (op == 1) {
 		ok = cur->remove(key, &log);
-		tCopy(status, 96, ok ? "Deleted " : "Key not found: ");
-		tAppendInt(status, 96, key);
+		copyText(status, 96, ok ? "Deleted " : "Key not found: ");
+		appendInt(status, 96, key);
 	}
 	else {
 		ok = (cur->search(key, &log) != nullptr);
-		tCopy(status, 96, ok ? "Found " : "Not found: ");
-		tAppendInt(status, 96, key);
+		copyText(status, 96, ok ? "Found " : "Not found: ");
+		appendInt(status, 96, key);
 	}
 	pb.start(&log, &mirror);
 	wasPlaying = true;
@@ -63,7 +65,7 @@ void SandboxScreen::clearTree() {
 	log.clear();
 	pb.start(&log, &mirror);
 	pb.clearLines();
-	tCopy(status, 96, "Cleared.");
+	copyText(status, 96, "Cleared.");
 }
 
 void SandboxScreen::switchTree() {
@@ -71,7 +73,7 @@ void SandboxScreen::switchTree() {
 	useAVL = !useAVL;
 	cur = useAVL ? static_cast<BST*>(&avl) : &bst;
 	view.setShowBalance(useAVL);
-	tCopy(status, 96, useAVL ? "Switched to AVL (tree cleared)." : "Switched to BST (tree cleared).");
+	copyText(status, 96, useAVL ? "Switched to AVL (tree cleared)." : "Switched to BST (tree cleared).");
 }
 
 void SandboxScreen::saveSandbox() {
@@ -79,16 +81,16 @@ void SandboxScreen::saveSandbox() {
 	Progress p;
 	char err[96];
 	int r = SaveManager::saveGame("sandbox.sav", p, (int)rngState, cur, useAVL ? SaveManager::KIND_AVL : SaveManager::KIND_BST, nullptr, err, 96);
-	tCopy(status, 96, r == SaveResult::OK ? "Saved to sandbox.sav" : err);
+	copyText(status, 96, r == SaveResult::OK ? "Saved to sandbox.sav" : err);
 }
 
 void SandboxScreen::loadSandbox() {
 	pb.finishNow();
 	Progress p; int seed = 0, kind = 0; bool hasHeap = false; char err[96];
 	int r = SaveManager::loadGame("sandbox.sav", p, seed, &bst, &avl, kind, nullptr, hasHeap, err, 96);
-	if (r == SaveResult::NOT_FOUND) { tCopy(status, 96, "No sandbox.sav yet - press F5 to save first."); return; }
-	if (r != SaveResult::OK) { tCopy(status, 96, "Load rejected: "); tAppend(status, 96, err); return; }
-	if (kind == SaveManager::KIND_NONE) { tCopy(status, 96, "That file holds no tree."); return; }
+	if (r == SaveResult::NOT_FOUND) { copyText(status, 96, "No sandbox.sav yet - press F5 to save first."); return; }
+	if (r != SaveResult::OK) { copyText(status, 96, "Load rejected: "); appendText(status, 96, err); return; }
+	if (kind == SaveManager::KIND_NONE) { copyText(status, 96, "That file holds no tree."); return; }
 	useAVL = (kind == SaveManager::KIND_AVL);
 	if (useAVL) bst.reset(); else avl.reset();           // only one tree is active
 	cur = useAVL ? static_cast<BST*>(&avl) : &bst;
@@ -97,23 +99,23 @@ void SandboxScreen::loadSandbox() {
 	mirror.loadFromModel(cur->getTree());
 	pb.start(&log, &mirror);
 	pb.clearLines();
-	tCopy(status, 96, "Loaded sandbox.sav (validated).");
+	copyText(status, 96, "Loaded sandbox.sav (validated).");
 }
 
 void SandboxScreen::handleEvent(const sf::Event& e) {
-	if (const auto* te = e.getIf<sf::Event::TextEntered>()) {
+	if (const sf::Event::TextEntered* te = e.getIf<sf::Event::TextEntered>()) {
 		unsigned c = te->unicode;
 		bool digit = (c >= '0' && c <= '9');
 		bool minus = (c == '-' && inputLen == 0);
 		if ((digit || minus) && inputLen < 9) { input[inputLen++] = (char)c; input[inputLen] = 0; }
 	}
-	else if (const auto* kp = e.getIf<sf::Event::KeyPressed>()) {
+	else if (const sf::Event::KeyPressed* kp = e.getIf<sf::Event::KeyPressed>()) {
 		switch (kp->code) {
 		case sf::Keyboard::Key::Backspace:
 			if (inputLen > 0) input[--inputLen] = 0;
 			break;
 		case sf::Keyboard::Key::Enter: {
-			if (inputLen == 0 || (inputLen == 1 && input[0] == '-')) { tCopy(status, 96, "Type a number first."); break; }
+			if (inputLen == 0 || (inputLen == 1 && input[0] == '-')) { copyText(status, 96, "Type a number first."); break; }
 			int v = 0, i = 0; bool neg = false;
 			if (input[0] == '-') { neg = true; i = 1; }
 			for (; i < inputLen; i++) v = v * 10 + (input[i] - '0');
@@ -151,14 +153,14 @@ void SandboxScreen::draw(sf::RenderWindow& w) {
 
 	// HUD
 	const char* opName = op == 0 ? "INSERT" : (op == 1 ? "DELETE" : "SEARCH");
-	char l1[96]; tCopy(l1, 96, useAVL ? "Tree: AVL" : "Tree: BST");
-	tAppend(l1, 96, "    Mode: "); tAppend(l1, 96, opName);
-	tAppend(l1, 96, "    Nodes: "); tAppendInt(l1, 96, mirror.count());
-	tAppend(l1, 96, "    Alarm steps: "); tAppendInt(l1, 96, pb.alarmSteps());
-	if (useAVL) { tAppend(l1, 96, "    Rotations: "); tAppendInt(l1, 96, pb.rotations); }
+	char l1[96]; copyText(l1, 96, useAVL ? "Tree: AVL" : "Tree: BST");
+	appendText(l1, 96, "    Mode: "); appendText(l1, 96, opName);
+	appendText(l1, 96, "    Nodes: "); appendInt(l1, 96, mirror.count());
+	appendText(l1, 96, "    Alarm steps: "); appendInt(l1, 96, pb.alarmSteps());
+	if (useAVL) { appendText(l1, 96, "    Rotations: "); appendInt(l1, 96, pb.rotations); }
 	put(w, l1, 14.0f, 10.0f, 18, sf::Color(220, 225, 240));
 
-	char l2[48]; tCopy(l2, 48, "Key: "); tAppend(l2, 48, input); tAppend(l2, 48, "_");
+	char l2[48]; copyText(l2, 48, "Key: "); appendText(l2, 48, input); appendText(l2, 48, "_");
 	put(w, l2, 14.0f, 38.0f, 22, sf::Color(255, 215, 90));
 	put(w, status, 14.0f, 70.0f, 16, sf::Color(150, 200, 255));
 
@@ -169,10 +171,10 @@ void SandboxScreen::draw(sf::RenderWindow& w) {
 	panel.setOutlineThickness(1.0f);
 	panel.setOutlineColor(sf::Color(70, 76, 100));
 	w.draw(panel);
-	char sp[40]; tCopy(sp, 40, pb.isPaused() ? "Event log (PAUSED) speed x" : "Event log   speed x");
-	tAppendInt(sp, 40, (int)(pb.getSpeed() * 10.0f + 0.5f) / 10);
-	tAppend(sp, 40, ".");
-	tAppendInt(sp, 40, (int)(pb.getSpeed() * 10.0f + 0.5f) % 10);
+	char sp[40]; copyText(sp, 40, pb.isPaused() ? "Event log (PAUSED) speed x" : "Event log   speed x");
+	appendInt(sp, 40, (int)(pb.getSpeed() * 10.0f + 0.5f) / 10);
+	appendText(sp, 40, ".");
+	appendInt(sp, 40, (int)(pb.getSpeed() * 10.0f + 0.5f) % 10);
 	put(w, sp, W - 320.0f, 18.0f, 16, sf::Color(220, 225, 240));
 	for (int i = 0; i < pb.lineCount(); i++)
 		put(w, pb.line(i), W - 320.0f, 50.0f + 24.0f * (float)i, 14, i == 0 ? sf::Color::White : sf::Color(140, 148, 170));

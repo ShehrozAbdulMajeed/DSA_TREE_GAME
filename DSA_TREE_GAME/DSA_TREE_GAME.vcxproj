@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -160,9 +160,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Act2Level.cpp" />
-    <ClCompile Include="Act2Screen.cpp" />
     <ClCompile Include="Act3Level.cpp" />
-    <ClCompile Include="Act3Screen.cpp" />
     <ClCompile Include="ActPlaceHolderScreen.cpp" />
     <ClCompile Include="ActTestMenu.cpp" />
     <ClCompile Include="AVL.cpp" />
@@ -178,9 +176,11 @@
     <ClCompile Include="SandboxScreen.cpp" />
     <ClCompile Include="SaveManager.cpp" />
     <ClCompile Include="TreeMirror.cpp" />
-    <ClCompile Include="TreeView.cpp" />
+<ClCompile Include="TreeView.cpp" />
     <ClCompile Include="Validator.cpp" />
-  </ItemGroup>
+  
+    <ClCompile Include="StringUtil.cpp" />
+</ItemGroup>
   <ItemGroup>
     <ClInclude Include="Act2Level.h" />
     <ClInclude Include="Act2Screen.h" />
@@ -201,15 +201,16 @@
     <ClInclude Include="SandboxScreen.h" />
     <ClInclude Include="SaveManager.h" />
     <ClInclude Include="Screen.h" />
-    <ClInclude Include="TextUtil.h" />
-    <ClInclude Include="TreeMirror.h" />
+<ClInclude Include="TreeMirror.h" />
     <ClInclude Include="TreeView.h" />
     <ClInclude Include="Validator.h" />
-  </ItemGroup>
+  
+    <ClInclude Include="StringUtil.h" />
+</ItemGroup>
   <ItemGroup>
     <Text Include="Conventions.txt" />
     <Text Include="LevelGuide.txt" />
-  </ItemGroup>
+</ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -43,7 +43,7 @@ private:
 	void drawPlay(sf::RenderWindow& w);
 	void drawResult(sf::RenderWindow& w);
 public:
-	Act3Screen(const sf::Font& font, Progress& progress);
+	Act3Screen(const sf::Font& font, Progress& progress, int gameSeed);
 	void handleEvent(const sf::Event& e) override;
 	void update(float dt) override;
 	void draw(sf::RenderWindow& w) override;
