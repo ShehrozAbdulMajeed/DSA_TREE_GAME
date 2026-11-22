@@ -68,6 +68,9 @@ AVLNode* AVL::rebalance(AVLNode* node, EventLog* log) {
 	updateHeight(node, log);
 	updateSize(node, log);
 
+	if (!balancing)
+		return node;
+
 	int bf = balanceFactor(node);
 	if (bf >= -1 && bf <= 1)
 		return node;
@@ -325,4 +328,43 @@ void AVL::recompute()
 bool AVL::isBalanced()
 {
 	return isBalancedHelper(static_cast<AVLNode*>(root));
+}
+
+AVLNode* AVL::findWithParent(AVLNode* cur, int id, AVLNode* par, AVLNode*& outParent)
+{
+	if (cur == nullptr) return nullptr;
+	if (cur->id == id) { outParent = par; return cur; }
+	AVLNode* l = findWithParent(static_cast<AVLNode*>(cur->left), id, cur, outParent);
+	if (l) return l;
+	return findWithParent(static_cast<AVLNode*>(cur->right), id, cur, outParent);
+}
+
+bool AVL::refreshAbove(AVLNode* cur, int id, EventLog* log)
+{
+	if (cur == nullptr) return false;
+	if (cur->id == id) return true;
+	bool inside = refreshAbove(static_cast<AVLNode*>(cur->left), id, log);
+	if (!inside) inside = refreshAbove(static_cast<AVLNode*>(cur->right), id, log);
+	if (inside) { updateHeight(cur, log); updateSize(cur, log); }
+	return inside;
+}
+
+bool AVL::rotateAt(int nodeId, bool left, EventLog* log)
+{
+	AVLNode* parent = nullptr;
+	AVLNode* node = findWithParent(static_cast<AVLNode*>(root), nodeId, nullptr, parent);
+	if (node == nullptr) return false;
+	AVLNode* child = static_cast<AVLNode*>(left ? node->right : node->left);
+	if (child == nullptr) return false;
+
+	if (log != nullptr)
+		log->add(EventTypes::ROTATE, node->id, left ? RotationType::RR : RotationType::LL, child->id);
+
+	AVLNode* top = left ? rotateLeft(node, log) : rotateRight(node, log);
+	if (parent == nullptr) root = top;
+	else if (parent->left == node) parent->left = top;
+	else parent->right = top;
+
+	refreshAbove(static_cast<AVLNode*>(root), top->id, log);
+	return true;
 }

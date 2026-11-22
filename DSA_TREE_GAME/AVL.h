@@ -20,10 +20,13 @@ private:
     void updateHeight(AVLNode* node, EventLog* log);
     void updateSize(AVLNode* node, EventLog* log);
     void recomputeHelper(AVLNode* node);
+    AVLNode* findWithParent(AVLNode* cur, int id, AVLNode* par, AVLNode*& outParent);
+    bool refreshAbove(AVLNode* cur, int id, EventLog* log);
 public:
-    long long rotationCount;   
+    long long rotationCount;   // benchmark hook: single rotations performed (a double = 2)
+    bool balancing;            // false = inserts/deletes update heights/sizes 
 
-    AVL() : BST(), rotationCount(0) {}
+    AVL() : BST(), rotationCount(0), balancing(true) {}
 
     void resetStats() { compareCount = 0; rotationCount = 0; }
 
@@ -34,6 +37,7 @@ public:
     AVLNode* rotateRight(AVLNode* node, EventLog* log = nullptr);
 
     bool insert(int key, int payload, EventLog* log = nullptr);
+    // Overrides BST::insert / BST::remove 
     bool insert(int key, EventLog* log = nullptr) override { return insert(key, 0, log); }
     bool remove(int key, EventLog* log = nullptr) override;
 
@@ -41,6 +45,7 @@ public:
     int rank(int key, EventLog* log = nullptr);
     int countInRange(int lo, int hi, EventLog* log = nullptr);
     bool isBalanced();
-    void recompute();          // recalculates every height and size
+    void recompute();          // recalculates every height and size 
     AVLNode* rebalance(AVLNode* node, EventLog* log = nullptr);
+    bool rotateAt(int nodeId, bool left, EventLog* log = nullptr);
 };

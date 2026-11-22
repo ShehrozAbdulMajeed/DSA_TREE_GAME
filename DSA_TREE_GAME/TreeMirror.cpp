@@ -140,7 +140,7 @@ void TreeMirror::markSubtree(int id, int mark) {
 	markSubtree(nodes[id].right, mark);
 }
 
-// Payloads as mentioned in conventions.txt
+// Payloads
 void TreeMirror::apply(const Events& e) {
 	switch (e.type) {
 	case EventTypes::VISIT:
@@ -221,4 +221,21 @@ bool TreeMirror::matchRec(int id, TreeNode* n, int parent) const {
 
 bool TreeMirror::matchesModel(TreeNode* modelRoot) const {
 	return matchRec(rootId, modelRoot, 0);
+}
+
+int TreeMirror::annotRec(int id, int& height, int& bad) const {
+	if (!id) { height = 0; return 0; }
+	int hl, hr;
+	int sl = annotRec(nodes[id].left, hl, bad);
+	int sr = annotRec(nodes[id].right, hr, bad);
+	height = 1 + (hl > hr ? hl : hr);
+	int size = 1 + sl + sr;
+	if (!bad && (nodes[id].size != size || nodes[id].height != height)) bad = id;
+	return size;
+}
+
+int TreeMirror::firstBadAnnotation() const {
+	int h = 0, bad = 0;
+	annotRec(rootId, h, bad);
+	return bad;
 }

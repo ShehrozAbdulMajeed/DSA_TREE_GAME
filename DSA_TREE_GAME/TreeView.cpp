@@ -2,7 +2,7 @@
 #include "TextUtil.h"
 
 TreeView::TreeView(const sf::Font& font) : label(font, "", 16) {
-	ax = 0; ay = 0; aw = 800; ah = 500; showBalance = false; targetId = 0; hintId = 0;
+	ax = 0; ay = 0; aw = 800; ah = 500; showBalance = false; targetId = 0; hintId = 0; selectedId = 0; showSize = false;
 }
 
 void TreeView::drawLabel(sf::RenderTarget& rt, const char* s, unsigned size, float cx, float cy, sf::Color c) {
@@ -106,6 +106,23 @@ void TreeView::draw(sf::RenderTarget& rt, const TreeMirror& m) {
 			rt.draw(ring);
 			drawLabel(rt, id == targetId ? "TARGET" : "HINT", 11, px, py - radius - 16.0f,
 				id == targetId ? sf::Color(255, 205, 60) : sf::Color(80, 220, 230));
+		}
+
+		if (id == selectedId) {
+			sf::CircleShape ring(radius + 4.0f);
+			ring.setPointCount(32);
+			ring.setOrigin({ radius + 4.0f, radius + 4.0f });
+			ring.setPosition({ px, py });
+			ring.setFillColor(sf::Color::Transparent);
+			ring.setOutlineThickness(3.0f);
+			ring.setOutlineColor(sf::Color::White);
+			rt.draw(ring);
+			drawLabel(rt, "SELECTED", 11, px, py + radius + 14.0f, sf::Color::White);
+		}
+
+		if (showSize && radius >= 10.0f && id != selectedId) {
+			char sz[16]; tCopy(sz, 16, "n="); tAppendInt(sz, 16, v->size);
+			drawLabel(rt, sz, 11, px, py + radius + 12.0f, sf::Color(170, 180, 205));
 		}
 
 		if (showBalance && radius >= 10.0f) {

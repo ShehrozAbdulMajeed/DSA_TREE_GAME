@@ -1,8 +1,8 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include "SandboxScreen.h"
 #include "Act2Screen.h"
+#include "Act3Screen.h"
 #include "Progress.h"
 #include "SaveManager.h"
 
@@ -34,6 +34,7 @@ int main()
         std::cout << "Progress loaded.\n";
     SandboxScreen sandbox(font);
     Act2Screen act2(font, progress);
+    Act3Screen act3(font, progress);
     Screen* active = &act2;                  // later: a ScreenManager + main menu + campaign map
 
     sf::Clock clock;
@@ -48,13 +49,15 @@ int main()
                 active = &sandbox;
             else if (kp && kp->code == sf::Keyboard::Key::F2)
                 active = &act2;
+            else if (kp && kp->code == sf::Keyboard::Key::F3)
+                active = &act3;
             else
                 active->handleEvent(*event);
         }
 
         float dt = clock.restart().asSeconds();
         active->update(dt);
-        if (act2.progressChanged())
+        if (act2.progressChanged() | act3.progressChanged())
             SaveManager::saveGame(SAVE_PATH, progress, seed, nullptr, SaveManager::KIND_NONE, nullptr, err, 96);
         active->draw(window);
         window.display();

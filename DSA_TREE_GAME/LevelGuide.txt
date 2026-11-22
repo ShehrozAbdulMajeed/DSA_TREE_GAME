@@ -11,8 +11,9 @@ Each level is one object inside the "levels" array:
 
 Fields
   id      label shown in the HUD ("2.1")
-  act     2 = shown by the Act 2 screen
-  type    "search" | "insert" | "remove" | "range" | "boss"
+  act     2 = shown by the Act 2 screen, 3 = shown by the Act 3 screen
+  type    Act 2: "search" | "insert" | "remove" | "range" | "boss"
+          Act 3: "badges" | "single" | "double" | "predict" | "order" | "endless"
   title   name on the level list
   brief   briefing text (max ~300 characters)
   seed    same seed = same tree and same target, so results are reproducible/gradable
@@ -22,9 +23,12 @@ Fields
   keys    optional list, e.g. [50,30,70,20,40]. If present the tree is built by inserting
           these keys in this order and "nodes"/"skew" are ignored (hand-made levels)
   target  search/insert only: the key to find / insert. Omit or -1 = chosen from the seed
-  rounds  remove only: how many deletions (1..8)
-  cases   remove only: wanted case for each round: 0 leaf, 1 one child, 2 two children,
-          e.g. [0,1,2]
+  rounds  remove / single / double / predict: how many rounds (1..8)
+  cases   remove: wanted case per round: 0 leaf, 1 one child, 2 two children, e.g. [0,1,2]
+          single/double/predict: wanted rotation per round: 0 LL, 1 RR, 2 LR, 3 RL,
+          and for predict also 4 = no rotation, e.g. [0,4,2,1,3,4]
+  target  also: order (boss) = k, the k-th largest key to steal (omit = chosen from the seed)
+  rate    endless only: starting seconds between operations (they speed up over time)
   lo, hi  range only: the key range. Omit or -1 = chosen from the seed
   shrink  boss only: seconds between each drop of the alarm capacity
 
@@ -37,3 +41,14 @@ Level types
   remove  for each target pick leaf / one child / two children, then watch the delete
   range   click rooms to collect every key in [lo,hi]; grey rooms are pruned
   boss    keys 1..nodes are delivered in sorted order (a corridor), then a timed search
+
+Act 3 level types
+  badges   click every unbalanced room (balance badges are shown)
+  single   select the lowest unbalanced room and rotate it (LL / RR cases)
+  double   identify the case first, then do the two rotations (LR / RL cases)
+  predict  guess which rotation (or none) the next insert causes, then watch the self-repair
+  order    sorted deliveries rebalance themselves, then find the k-th largest using subtree sizes
+  endless  inserts/deletes stream in, nothing self-balances; repair by rotating. Collapse at balance 3.
+           Stars by survival: 30 s = 1, 60 s = 2, 120 s = 3. Score = seconds survived x 10.
+For single/double/predict the generator searches for a key that really produces the requested
+rotation case, so "cases" is a guarantee, not a hope (seed still decides which tree you get).

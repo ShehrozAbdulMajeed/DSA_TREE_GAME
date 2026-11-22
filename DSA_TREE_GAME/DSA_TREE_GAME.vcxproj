@@ -161,6 +161,8 @@
   <ItemGroup>
     <ClCompile Include="Act2Level.cpp" />
     <ClCompile Include="Act2Screen.cpp" />
+    <ClCompile Include="Act3Level.cpp" />
+    <ClCompile Include="Act3Screen.cpp" />
     <ClCompile Include="AVL.cpp" />
     <ClCompile Include="BinaryTree.cpp" />
     <ClCompile Include="BST.cpp" />
@@ -179,6 +181,8 @@
   <ItemGroup>
     <ClInclude Include="Act2Level.h" />
     <ClInclude Include="Act2Screen.h" />
+    <ClInclude Include="Act3Level.h" />
+    <ClInclude Include="Act3Screen.h" />
     <ClInclude Include="AVL.h" />
     <ClInclude Include="BinaryTree.h" />
     <ClInclude Include="BST.h" />
